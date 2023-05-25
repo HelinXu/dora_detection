@@ -90,7 +90,7 @@ def get_evaluator(cfg, dataset_name, output_folder=None):
     return DatasetEvaluators(evaluator_list)
 
 
-def do_test(cfg, model):
+def do_test(cfg, model, storage=None):
     results = OrderedDict()
     for dataset_name in cfg.DATASETS.TEST:
         data_loader = build_detection_test_loader(cfg, dataset_name)
@@ -102,6 +102,17 @@ def do_test(cfg, model):
         if comm.is_main_process():
             logger.info("Evaluation results for {} in csv format:".format(dataset_name))
             print_csv_format(results_i)
+            # dump to storage, save to tensorboard
+            if storage != None:
+                for key, value in results_i.items(): # key = bbox / segm; value = {'AP': xx, 'APm': xx, ...}
+                    logging.info(f'key value: {key}, {value}')
+                    logging.info(f'key: {key}')
+                    out_aps_dict = {}
+                    for k, v in value.items():
+                        k = dataset_name + '_' + k
+                        out_aps_dict[k] = v
+                        # print('**{k: v.item() for k, v in comm.reduce_dict(results_i).items()}\n', type(**{k: v.item() for k, v in comm.reduce_dict(results_i).items()}))
+                    storage.put_scalars(**out_aps_dict)
     if len(results) == 1:
         results = list(results.values())[0]
     return results
@@ -156,7 +167,7 @@ def do_train(cfg, model, resume=False):
             ):
                 visualize('valid_ui', 5, iteration)
                 visualize('train_ui', 5, iteration)
-                do_test(cfg, model)
+                do_test(cfg, model, storage)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
 
