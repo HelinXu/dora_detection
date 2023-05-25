@@ -1,23 +1,4 @@
-#!/usr/bin/env python
-# Copyright (c) Facebook, Inc. and its affiliates.
-"""
-Detectron2 training script with a plain training loop.
-
-This script reads a given config file and runs the training or evaluation.
-It is an entry point that is able to train standard models in detectron2.
-
-In order to let one script support training of many models,
-this script contains logic that are specific to these built-in models and therefore
-may not be suitable for your own project.
-For example, your research project perhaps only needs a single "evaluator".
-
-Therefore, we recommend you to use detectron2 as a library and take
-this file as an example of how to use the library.
-You may want to write your own script with your datasets and other customizations.
-
-Compared to "train_net.py", this script supports fewer default features.
-It also includes fewer abstraction, therefore is easier to add custom logic.
-"""
+data_root = '/root/autodl-tmp/ui_dataset'
 
 import logging
 import os
@@ -29,6 +10,7 @@ import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import (
+    datasets,
     MetadataCatalog,
     build_detection_test_loader,
     build_detection_train_loader,
@@ -186,7 +168,17 @@ def setup(args):
 def main(args):
     cfg = setup(args)
 
-    
+    datasets.register_coco_instances("train_ui", {},
+                                     f"{data_root}/train/_annotations.coco.json",
+                                     f"{data_root}/train")
+    datasets.register_coco_instances("test_ui", {},
+                                     f"{data_root}/test/_annotations.coco.json",
+                                     f"{data_root}/test")
+    datasets.register_coco_instances("val_ui", {},
+                                     f"{data_root}/valid/_annotations.coco.json",
+                                     f"{data_root}/valid")
+    print('done registering datasets')
+
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
