@@ -5,13 +5,17 @@ import os
 from collections import OrderedDict
 import torch
 from torch.nn.parallel import DistributedDataParallel
+import random
+import cv2
 
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
 from detectron2.config import get_cfg
+from detectron2.utils.visualizer import Visualizer
 from detectron2.data import (
     datasets,
     MetadataCatalog,
+    get_detection_dataset_dicts,
     build_detection_test_loader,
     build_detection_train_loader,
 )
@@ -33,6 +37,17 @@ from detectron2.solver import build_lr_scheduler, build_optimizer
 from detectron2.utils.events import EventStorage
 
 logger = logging.getLogger("detectron2")
+
+
+def visualize(dataset_name='valid_ui', num=4, iter=0):
+    metadata = MetadataCatalog.get(dataset_name)
+    dataset = get_detection_dataset_dicts(dataset_name)
+
+    for i, d in enumerate(random.sample(dataset, num)):
+        img = cv2.imread(d["file_name"])
+        visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
+        vis = visualizer.draw_dataset_dict(d)
+        cv2.imwrite(f'./imgs/{iter}_{dataset_name}_{i}.png', vis.get_image()[:, :, ::-1])
 
 
 def get_evaluator(cfg, dataset_name, output_folder=None):
@@ -139,6 +154,8 @@ def do_train(cfg, model, resume=False):
                 and (iteration + 1) % cfg.TEST.EVAL_PERIOD == 0
                 and iteration != max_iter - 1
             ):
+                visualize('valid_ui', 5, iteration)
+                visualize('train_ui', 5, iteration)
                 do_test(cfg, model)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
@@ -174,7 +191,7 @@ def main(args):
     datasets.register_coco_instances("test_ui", {},
                                      f"{data_root}/test/_annotations.coco.json",
                                      f"{data_root}/test")
-    datasets.register_coco_instances("val_ui", {},
+    datasets.register_coco_instances("valid_ui", {},
                                      f"{data_root}/valid/_annotations.coco.json",
                                      f"{data_root}/valid")
     print('done registering datasets')
