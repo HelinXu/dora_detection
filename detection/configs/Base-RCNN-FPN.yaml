@@ -30,11 +30,11 @@ MODEL:
     NUM_CONV: 4
     POOLER_RESOLUTION: 14
 DATASETS:
-  TRAIN: ("ui",)
-  TEST: ("ui",)
+  TRAIN: ("train_ui",)
+  TEST: ("test_ui",)
 SOLVER:
-  IMS_PER_BATCH: 16
-  BASE_LR: 0.02
+  IMS_PER_BATCH: 8
+  BASE_LR: 0.002
   STEPS: (60000, 80000)
   MAX_ITER: 90000
 INPUT:
