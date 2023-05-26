@@ -36,10 +36,15 @@ from detectron2.modeling import build_model
 from detectron2.solver import build_lr_scheduler, build_optimizer
 from detectron2.utils.events import EventStorage
 
+from icecream import ic, install
+install()
+ic.configureOutput(includeContext=True, contextAbsPath=True)
+
 logger = logging.getLogger("detectron2")
 
 
 def visualize(dataset_name='valid_ui', num=4, iter=0):
+    os.mkdir('./imgs', exist_ok=True)
     metadata = MetadataCatalog.get(dataset_name)
     dataset = get_detection_dataset_dicts(dataset_name)
 
@@ -199,6 +204,9 @@ def main(args):
     datasets.register_coco_instances("train_ui", {},
                                      f"{data_root}/train/_annotations.coco.json",
                                      f"{data_root}/train")
+    datasets.register_coco_instances("train_dora_ui", {},
+                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train/_annotations.coco.json",
+                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
     datasets.register_coco_instances("test_ui", {},
                                      f"{data_root}/test/_annotations.coco.json",
                                      f"{data_root}/test")
