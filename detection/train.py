@@ -44,7 +44,8 @@ logger = logging.getLogger("detectron2")
 
 
 def visualize(dataset_name='valid_ui', num=4, iter=0):
-    os.mkdir('./imgs', exist_ok=True)
+    if not os.path.exists('./imgs'):
+        os.mkdir('./imgs')
     metadata = MetadataCatalog.get(dataset_name)
     dataset = get_detection_dataset_dicts(dataset_name)
 
@@ -205,7 +206,7 @@ def main(args):
                                      f"{data_root}/train/_annotations.coco.json",
                                      f"{data_root}/train")
     datasets.register_coco_instances("train_dora_ui", {},
-                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train/_annotations.coco.json",
+                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train.json",
                                      f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
     datasets.register_coco_instances("test_ui", {},
                                      f"{data_root}/test/_annotations.coco.json",
@@ -213,6 +214,9 @@ def main(args):
     datasets.register_coco_instances("valid_ui", {},
                                      f"{data_root}/valid/_annotations.coco.json",
                                      f"{data_root}/valid")
+    datasets.register_coco_instances("valid_dora_ui", {},
+                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/val.json",
+                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
     print('done registering datasets')
 
 
