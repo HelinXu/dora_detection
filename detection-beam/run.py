@@ -67,7 +67,7 @@ def inference(**inputs):
     #     print("Class:", obj['class'], "Score:", obj['score'], "BBox:", obj['bbox'])
 
     # Visualize the detections
-    v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=0.5)
+    v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1)
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
     print("output image saved")
@@ -76,9 +76,6 @@ def inference(**inputs):
     retval, buffer = cv2.imencode('.png', v.get_image()[:, :, ::-1])
     return_image_text = str(base64.b64encode(buffer).decode('utf-8'))
 
-    print("return image encoded")
-    print(return_image_text[0:100])
-    print(type(return_image_text))
     results = {
         "response": return_image_text
     }
