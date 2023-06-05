@@ -8,6 +8,7 @@ def inference(**inputs):
     import cv2
     import base64
     import numpy as np
+    import json
 
     category = {"id":1,"name":"Text","supercategory":"UI"},{"id":2,"name":"Image","supercategory":"UI"},{"id":3,"name":"Icon","supercategory":"UI"}
 
@@ -41,6 +42,8 @@ def inference(**inputs):
     jpg_original = base64.b64decode(jpg_as_text)
 
     image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
+    # save current image
+    cv2.imwrite('pvc/current_image.png', image)
 
     # Run inference
     outputs = predictor(image)
@@ -64,9 +67,17 @@ def inference(**inputs):
     # Visualize the detections
     v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=0.5)
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-    # cv2.imwrite('output.png', v.get_image()[:, :, ::-1])
+    cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
 
-    return {"objects": detected_objects}
+    # encode image base64
+    retval, buffer = cv2.imencode('.png', v.get_image()[:, :, ::-1])
+    return_image_text = str(base64.b64encode(buffer).decode('utf-8'))
+
+
+    results = {
+        "image": return_image_text
+    }
+    return json.dumps(results)
 
 
 if __name__ == "__main__":

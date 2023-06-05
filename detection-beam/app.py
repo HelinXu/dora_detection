@@ -23,7 +23,7 @@ app.Mount.PersistentVolume(name="pvc", path="./pvc")
 
 # Triggers determine how your app is deployed
 app.Trigger.RestAPI(
-    inputs={"text": beam.Types.String()},
+    inputs={"image_base64": beam.Types.String()},
     outputs={"response": beam.Types.String()},
     handler="run.py:inference"
 )
