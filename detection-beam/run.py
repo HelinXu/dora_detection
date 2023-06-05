@@ -77,14 +77,15 @@ def inference(**inputs):
     results = {
         "image": return_image_text
     }
-    return json.dumps(results)
+    return results
 
 
 if __name__ == "__main__":
     import cv2
     import base64
+    import numpy as np
     # Load the input image
-    image_name = 'test.jpg'
+    image_name = 'example.jpeg'
 
     # encode image base64
     retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
@@ -92,5 +93,12 @@ if __name__ == "__main__":
 
     result = inference(image_base64=text)
     print(result)
+
+    # decode image base64
+    print(bytes(result['image'], 'utf-8'))
+    jpg_original = base64.b64decode(bytes(result['image'], 'utf-8'))
+    image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
+    cv2.imwrite('output.png', image)
+
     
 
