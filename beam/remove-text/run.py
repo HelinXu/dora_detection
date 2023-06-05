@@ -13,15 +13,10 @@ def midpoint(x1, y1, x2, y2):
 
 
 def remove_text(**inputs):
-    # Grab the base64 from the kwargs
-    encoded_image = inputs["image"]
-    # Convert the base64-encoded input image to a buffer
-    image_buffer = base64.b64decode(encoded_image)
 
     pipeline = keras_ocr.pipeline.Pipeline()
 
-    # Read the image
-    img = keras_ocr.tools.read(image_buffer)
+    img = keras_ocr.tools.read(inputs['image'])
     # Generate (word, box) tuples
     prediction_groups = pipeline.recognize([img])
     mask = np.zeros(img.shape[:2], dtype="uint8")
@@ -47,5 +42,4 @@ def remove_text(**inputs):
 if __name__ == "__main__":
     input_image = "./example.jpeg"
     with open(input_image, "rb") as image_file:
-        encoded_image = base64.b64encode(image_file.read())
-        remove_text(image=encoded_image)
+        remove_text(image=input_image)
