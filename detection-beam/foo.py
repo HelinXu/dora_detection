@@ -5,14 +5,11 @@ import base64
 import cv2
 import numpy as np
 
-image_name = 'test.jpg'
+image_name = 'cqsl.jpg'
 
 # encode image base64
 retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
 text = str(base64.b64encode(buffer).decode('utf-8'))
-
-print(text)
-
 # print(type(text))
 
 # jpg_as_text = bytes(text, 'utf-8')
@@ -40,4 +37,16 @@ response = requests.request("POST", url,
   data=json.dumps(payload)
 )
 
-print(response.text)
+# get the dict
+response = response.json()
+
+jpg_as_text = bytes(response['response'], 'utf-8')
+
+jpg_original = base64.b64decode(jpg_as_text)
+
+# print(jpg_original, type(jpg_original))
+
+image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
+
+# save image
+cv2.imwrite('outputtt.png', image)
