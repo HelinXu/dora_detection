@@ -4,7 +4,7 @@ def inference(**inputs):
     from detectron2.config import get_cfg
     from detectron2.engine import DefaultPredictor
     from detectron2.utils.visualizer import Visualizer
-    from detectron2.data import MetadataCatalog, datasets, get_detection_dataset_dicts
+    from detectron2.data import MetadataCatalog, datasets, get_detection_dataset_dicts, DatasetCatalog
     import cv2
     import base64
     import numpy as np
@@ -20,7 +20,9 @@ def inference(**inputs):
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
     cfg.MODEL.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    datasets.register_coco_instances("dora_ui", {}, f"data.json", f"./")
+    # if dataset not registered
+    if "dora_ui" not in DatasetCatalog.list():
+        datasets.register_coco_instances("dora_ui", {}, f"data.json", f"./")
 
     # Create the predictor
     predictor = DefaultPredictor(cfg)
