@@ -9,7 +9,7 @@ import cv2
 category = {"id":1,"name":"Text","supercategory":"UI"},{"id":2,"name":"Image","supercategory":"UI"},{"id":3,"name":"Icon","supercategory":"UI"}
 
 # Load the pre-trained model and config
-model_path = './model0.pth'
+model_path = './pvc/model0.pth'
 config_path = './configs/faster_rcnn_R_50_FPN_1x.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
