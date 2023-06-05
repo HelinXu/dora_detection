@@ -1,0 +1,5 @@
+{"categories":[{"id":0,"name":"Container","supercategory":"UI"},{"id":1,"name":"Text","supercategory":"UI"},{"id":2,"name":"Image","supercategory":"UI"},{"id":3,"name":"Icon","supercategory":"UI"}],
+"images":[{"id":1076094024,"width":1440,"height":800,"file_name":"example.jpeg","license":1,"flickr_url":"","coco_url":"","date_captured":"2023/6/1 下午2:16:12"}],
+"annotations":[],
+"info":{"description":"COCO 2017 Dataset of Dora AI","contributor":"Dora AI","url":"http://cocodataset.org","version":"1.0","year":2023,"date_created":"2023/6/1"},"licenses":[{"id":1,"name":"Dora AI","url":"https://dora.run/ai"}]
+}

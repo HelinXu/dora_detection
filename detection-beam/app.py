@@ -23,5 +23,5 @@ app = beam.App(
 app.Trigger.RestAPI(
     inputs={"text": beam.Types.String()},
     outputs={"response": beam.Types.String()},
-    handler="run.py:hello_world"
+    handler="run.py:inference"
 )
