@@ -35,7 +35,7 @@ def inference(**inputs):
     # retval, buffer = cv2.imencode('.jpg', image)
     # jpg_as_text = base64.b64encode(buffer)
 
-    jpg_as_text = inputs['image_base64']
+    jpg_as_text = bytes(inputs['image_base64'], 'utf-8')
 
     # decode image base64
     jpg_original = base64.b64decode(jpg_as_text)
@@ -66,19 +66,19 @@ def inference(**inputs):
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     # cv2.imwrite('output.png', v.get_image()[:, :, ::-1])
 
-    return {"objects": detected_objects, "picture": v.get_image()[:, :, ::-1]}
+    return {"objects": detected_objects}
 
 
 if __name__ == "__main__":
     import cv2
     import base64
     # Load the input image
-    image_path = 'example.jpeg'
-    image = cv2.imread(image_path)
+    image_name = 'test.jpg'
 
     # encode image base64
-    retval, buffer = cv2.imencode('.jpg', image)
-    text = base64.b64encode(buffer)
+    retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
+    text = str(base64.b64encode(buffer).decode('utf-8'))
+
     result = inference(image_base64=text)
     print(result)
     
