@@ -6,11 +6,13 @@ def inference(**inputs):
     from detectron2.utils.visualizer import Visualizer
     from detectron2.data import MetadataCatalog, datasets, get_detection_dataset_dicts
     import cv2
+    import base64
+    import numpy as np
 
     category = {"id":1,"name":"Text","supercategory":"UI"},{"id":2,"name":"Image","supercategory":"UI"},{"id":3,"name":"Icon","supercategory":"UI"}
 
     # Load the pre-trained model and config
-    model_path = './model0.pth'
+    model_path = './pvc/model0.pth'
     config_path = './configs/faster_rcnn_R_50_FPN_1x.yaml'
     cfg = get_cfg()
     cfg.merge_from_file(config_path)
@@ -23,9 +25,20 @@ def inference(**inputs):
     # Create the predictor
     predictor = DefaultPredictor(cfg)
 
-    # Load the input image
-    image_path = 'example.jpeg'
-    image = cv2.imread(image_path)
+    # # Load the input image
+    # image_path = 'example.jpeg'
+    # image = cv2.imread(image_path)
+
+    # # encode image base64
+    # retval, buffer = cv2.imencode('.jpg', image)
+    # jpg_as_text = base64.b64encode(buffer)
+
+    jpg_as_text = inputs['image_base64']
+
+    # decode image base64
+    jpg_original = base64.b64decode(jpg_as_text)
+
+    image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
 
     # Run inference
     outputs = predictor(image)
@@ -51,12 +64,20 @@ def inference(**inputs):
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     # cv2.imwrite('output.png', v.get_image()[:, :, ::-1])
 
-    return {"response": detected_objects, "picture": v.get_image()[:, :, ::-1]}
+    return {"objects": detected_objects, "picture": v.get_image()[:, :, ::-1]}
 
 
 if __name__ == "__main__":
-    text = "Testing 123"
-    result = inference(text=text)
+    import cv2
+    import base64
+    # Load the input image
+    image_path = 'example.jpeg'
+    image = cv2.imread(image_path)
+
+    # encode image base64
+    retval, buffer = cv2.imencode('.jpg', image)
+    text = base64.b64encode(buffer)
+    result = inference(image_base64=text)
     print(result)
     
 
