@@ -44,12 +44,14 @@ def inference(**inputs):
     image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
     # save current image
     cv2.imwrite('pvc/current_image.png', image)
+    print("current image saved")
 
     # Run inference
     outputs = predictor(image)
 
     # Get the predicted instances
     instances = outputs['instances']
+    print("inst number:", len(instances))
 
     # Get the detected objects and their scores
     detected_objects = []
@@ -65,17 +67,17 @@ def inference(**inputs):
     #     print("Class:", obj['class'], "Score:", obj['score'], "BBox:", obj['bbox'])
 
     # Visualize the detections
-    v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=0.5)
+    v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1)
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
+    print("output image saved")
 
     # encode image base64
     retval, buffer = cv2.imencode('.png', v.get_image()[:, :, ::-1])
     return_image_text = str(base64.b64encode(buffer).decode('utf-8'))
 
-
     results = {
-        "image": return_image_text
+        "response": return_image_text
     }
     return results
 
@@ -95,7 +97,7 @@ if __name__ == "__main__":
     print(result)
 
     # decode image base64
-    print(bytes(result['image'], 'utf-8'))
+    print(bytes(result['response'], 'utf-8'))
     jpg_original = base64.b64decode(bytes(result['image'], 'utf-8'))
     image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
     cv2.imwrite('output.png', image)
