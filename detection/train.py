@@ -181,8 +181,8 @@ def do_train(cfg, model, resume=False):
                 and (iteration + 1) % cfg.TEST.EVAL_PERIOD == 0
                 and iteration != max_iter - 1
             ):
-                visualize('train_dora_ui', cfg, 5, iteration)
-                visualize('valid_dora_ui', cfg, 5, iteration)
+                visualize(cfg.DATASETS.TEST, cfg, 5, iteration)
+                visualize(cfg.DATASETS.TRAIN, cfg, 5, iteration)
                 do_test(cfg, model, storage)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()

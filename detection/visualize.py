@@ -15,14 +15,14 @@ dataset_name = "dora_data"
 
 # Register the dataset
 datasets.register_coco_instances("dora_data", {},
-                                f"/root/autodl-tmp/dora_dataset/train.json",
-                                f"/root/autodl-tmp/dora_dataset/train")
+                                f"/root/autodl-tmp/dora_font_v1/test/test.json",
+                                f"/root/autodl-tmp/dora_font_v1/test")
 # MetadataCatalog.get(dataset_name).set(thing_classes=["A", "B", "C", "D"])  # Add the object classes
 metadata = MetadataCatalog.get(dataset_name)
 
 # Load the pre-trained model and config
-model_path = './output/model_0009999.pth'
-config_path = './configs/faster_rcnn_R_50_FPN_1x.yaml'
+model_path = './output/model_0004999.pth'
+config_path = './configs/font.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
@@ -34,21 +34,23 @@ predictor = DefaultPredictor(cfg)
 
 # Load a random image from the dataset
 dataset_dicts = DatasetCatalog.get(dataset_name)
-random_image = random.choice(dataset_dicts)
-image_path = random_image["file_name"]
-image = cv2.imread(image_path)
 
-# Run inference
-outputs = predictor(image)
+for i in range(30):
+    random_image = random.choice(dataset_dicts)
+    image_path = random_image["file_name"]
+    image = cv2.imread(image_path)
 
-# Visualize the predictions
-v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1.2)
-out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+    # Run inference
+    outputs = predictor(image)
 
-# Save the visualization
-cv2.imwrite("output.jpg", out.get_image()[:, :, ::-1])
+    # Visualize the predictions
+    v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1.2)
+    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
 
-# Also, visualize the ground truth
-v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1.2)
-out = v.draw_dataset_dict(random_image)
-cv2.imwrite("output_gt.jpg", out.get_image()[:, :, ::-1])
+    # Save the visualization
+    cv2.imwrite(f"imgs/output_{i}.jpg", out.get_image()[:, :, ::-1])
+
+    # Also, visualize the ground truth
+    v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1.2)
+    out = v.draw_dataset_dict(random_image)
+    cv2.imwrite(f"imgs/output_gt_{i}.jpg", out.get_image()[:, :, ::-1])
