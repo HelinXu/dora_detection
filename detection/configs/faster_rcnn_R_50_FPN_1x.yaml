@@ -8,3 +8,8 @@ SOLVER:
   CHECKPOINT_PERIOD: 5000
 TEST:
   EVAL_PERIOD: 1000
+DATASETS:
+  TRAIN: ("train_dora_ui",)
+  TEST: ("valid_dora_ui",)
+SOLVER:
+  IMS_PER_BATCH: 12
