@@ -227,6 +227,9 @@ def main(args):
     datasets.register_coco_instances("valid_dora_ui", {},
                                      f"{data_root.replace('ui_dataset', 'dora_dataset')}/val.json",
                                      f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
+    datasets.register_coco_instances("train_dora_font", {},
+                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/train/train.json",
+                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/train")
     print('done registering datasets')
 
     model = build_model(cfg)
