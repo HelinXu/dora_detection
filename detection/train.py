@@ -19,7 +19,7 @@ from detectron2.data import (
     build_detection_test_loader,
     build_detection_train_loader,
 )
-from detectron2.engine import default_argument_parser, default_setup, default_writers, launch
+from detectron2.engine import default_argument_parser, default_setup, default_writers, launch, DefaultPredictor
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
     CityscapesSemSegEvaluator,
@@ -43,7 +43,7 @@ ic.configureOutput(includeContext=True, contextAbsPath=True)
 logger = logging.getLogger("detectron2")
 
 
-def visualize(dataset_name='valid_ui', num=4, iter=0):
+def visualize(dataset_name='valid_ui', cfg=None, num=4, iter=0):
     if not os.path.exists('./imgs'):
         os.mkdir('./imgs')
     metadata = MetadataCatalog.get(dataset_name)
@@ -53,7 +53,17 @@ def visualize(dataset_name='valid_ui', num=4, iter=0):
         img = cv2.imread(d["file_name"])
         visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
         vis = visualizer.draw_dataset_dict(d)
-        cv2.imwrite(f'./imgs/{iter}_{dataset_name}_{i}.png', vis.get_image()[:, :, ::-1])
+        gt = vis.get_image()[:, :, ::-1]
+
+        predictor = DefaultPredictor(cfg)
+        outputs = predictor(img)
+        visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
+        vis = visualizer.draw_instance_predictions(outputs["instances"].to("cpu"))
+        pred = vis.get_image()[:, :, ::-1]
+
+        # concat and save image
+        img = cv2.hconcat([gt, pred])
+        cv2.imwrite(f'./imgs/{iter}_{dataset_name}_{i}.jpg', img)
 
 
 def get_evaluator(cfg, dataset_name, output_folder=None):
@@ -171,8 +181,8 @@ def do_train(cfg, model, resume=False):
                 and (iteration + 1) % cfg.TEST.EVAL_PERIOD == 0
                 and iteration != max_iter - 1
             ):
-                visualize('valid_ui', 5, iteration)
-                visualize('train_ui', 5, iteration)
+                visualize('train_dora_ui', cfg, 5, iteration)
+                visualize('valid_dora_ui', cfg, 5, iteration)
                 do_test(cfg, model, storage)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
@@ -218,7 +228,6 @@ def main(args):
                                      f"{data_root.replace('ui_dataset', 'dora_dataset')}/val.json",
                                      f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
     print('done registering datasets')
-
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
