@@ -1,4 +1,4 @@
-data_root = '/root/autodl-tmp/'
+data_root = '/root/autodl-tmp'
 
 import logging
 import os
@@ -7,6 +7,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel
 import random
 import cv2
+import copy
 
 import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer, PeriodicCheckpointer
@@ -55,15 +56,24 @@ def visualize(dataset_name='valid_ui', cfg=None, num=4, iter=0):
         vis = visualizer.draw_dataset_dict(d)
         gt = vis.get_image()[:, :, ::-1]
 
-        predictor = DefaultPredictor(cfg)
-        outputs = predictor(img)
-        visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
-        vis = visualizer.draw_instance_predictions(outputs["instances"].to("cpu"))
-        pred = vis.get_image()[:, :, ::-1]
+        # read last_checkpoint
+        with open(os.path.join(cfg.OUTPUT_DIR, 'last_checkpoint'), 'r') as f:
+            last_checkpoint = f.read()
+        if os.path.exists(os.path.join(cfg.OUTPUT_DIR, last_checkpoint)):
+            print(f'last_checkpoint: {last_checkpoint}')
+            ckpt_iter = last_checkpoint.split('_')[-1].split('.')[0]
+            tmp_cfg = copy.deepcopy(cfg)
+            tmp_cfg.defrost()
+            tmp_cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, last_checkpoint)
+            predictor = DefaultPredictor(tmp_cfg)
+            outputs = predictor(img)
+            visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
+            vis = visualizer.draw_instance_predictions(outputs["instances"].to("cpu"))
+            pred = vis.get_image()[:, :, ::-1]
 
-        # concat and save image
-        img = cv2.hconcat([gt, pred])
-        cv2.imwrite(f'./imgs/{iter}_{dataset_name}_{i}.jpg', img)
+            # concat and save image
+            img = cv2.hconcat([gt, pred])
+            cv2.imwrite(f'./imgs/{ckpt_iter}_{dataset_name}_{i}.jpg', img)
 
 
 def get_evaluator(cfg, dataset_name, output_folder=None):
@@ -181,8 +191,8 @@ def do_train(cfg, model, resume=False):
                 and (iteration + 1) % cfg.TEST.EVAL_PERIOD == 0
                 and iteration != max_iter - 1
             ):
-                visualize(cfg.DATASETS.TEST, cfg, 5, iteration)
-                visualize(cfg.DATASETS.TRAIN, cfg, 5, iteration)
+                visualize(cfg.DATASETS.TEST[0], cfg, 5, iteration)
+                visualize(cfg.DATASETS.TRAIN[0], cfg, 5, iteration)
                 do_test(cfg, model, storage)
                 # Compared to "train_net.py", the test results are not dumped to EventStorage
                 comm.synchronize()
@@ -240,6 +250,8 @@ def main(args):
             model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
         )
 
+    visualize(cfg.DATASETS.TEST[0], cfg, 5, 0)
+    visualize(cfg.DATASETS.TRAIN[0], cfg, 5, 0)
     do_train(cfg, model, resume=args.resume)
     return do_test(cfg, model)
 
@@ -252,6 +264,6 @@ if __name__ == "__main__":
         args.num_gpus,
         num_machines=args.num_machines,
         machine_rank=args.machine_rank,
-        dist_url=args.dist_url,
+        dist_url='auto',
         args=(args,),
     )
