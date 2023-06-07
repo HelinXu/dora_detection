@@ -1,4 +1,4 @@
-data_root = '/root/autodl-tmp/ui_dataset'
+data_root = '/root/autodl-tmp/'
 
 import logging
 import os
@@ -213,26 +213,17 @@ def main(args):
     cfg = setup(args)
 
     datasets.register_coco_instances("train_ui", {},
-                                     f"{data_root}/train/_annotations.coco.json",
-                                     f"{data_root}/train")
-    datasets.register_coco_instances("train_dora_ui", {},
-                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train.json",
-                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
+                                    f"{data_root}/ui_dataset/train/_annotations.coco.json",
+                                    f"{data_root}/ui_dataset/train")
     datasets.register_coco_instances("test_ui", {},
-                                     f"{data_root}/test/_annotations.coco.json",
-                                     f"{data_root}/test")
-    datasets.register_coco_instances("valid_ui", {},
-                                     f"{data_root}/valid/_annotations.coco.json",
-                                     f"{data_root}/valid")
-    datasets.register_coco_instances("valid_dora_ui", {},
-                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/val.json",
-                                     f"{data_root.replace('ui_dataset', 'dora_dataset')}/train")
-    datasets.register_coco_instances("train_dora_font", {},
-                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/train/train.json",
-                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/train")
-    datasets.register_coco_instances("test_dora_font", {},
-                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/test/test.json",
-                                     f"{data_root.replace('ui_dataset', 'dora_font_v1')}/test")
+                                    f"{data_root}/ui_dataset/test/_annotations.coco.json",
+                                    f"{data_root}/ui_dataset/test")
+    datasets.register_coco_instances("train_dora_sim", {},
+                                    f"{data_root}/dora_sim/train/train.json",
+                                    f"{data_root}/dora_sim/train")
+    datasets.register_coco_instances("test_dora_sim", {},
+                                    f"{data_root}/dora_sim/test/test.json",
+                                    f"{data_root}/dora_sim/test")
     print('done registering datasets')
 
     model = build_model(cfg)
