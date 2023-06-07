@@ -1,16 +1,12 @@
 def inference(**inputs):
     import torch
-    import detectron2
     from detectron2.config import get_cfg
     from detectron2.engine import DefaultPredictor
     from detectron2.utils.visualizer import Visualizer
-    from detectron2.data import MetadataCatalog, datasets, get_detection_dataset_dicts, DatasetCatalog
+    from detectron2.data import Metadata
     import cv2
     import base64
     import numpy as np
-    import json
-
-    category = {"id":1,"name":"Text","supercategory":"UI"},{"id":2,"name":"Image","supercategory":"UI"},{"id":3,"name":"Icon","supercategory":"UI"}
 
     # Load the pre-trained model and config
     model_path = './pvc/model0.pth'
@@ -20,21 +16,11 @@ def inference(**inputs):
     cfg.MODEL.WEIGHTS = model_path
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
     cfg.MODEL.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-    # if dataset not registered
-    if "dora_ui" not in DatasetCatalog.list():
-        datasets.register_coco_instances("dora_ui", {}, f"data.json", f"./")
+    
+    metadata = Metadata(thing_classes=["Container", "Text", "Image", "Icon"])
 
     # Create the predictor
     predictor = DefaultPredictor(cfg)
-
-    # # Load the input image
-    # image_path = 'example.jpeg'
-    # image = cv2.imread(image_path)
-
-    # # encode image base64
-    # retval, buffer = cv2.imencode('.jpg', image)
-    # jpg_as_text = base64.b64encode(buffer)
 
     jpg_as_text = bytes(inputs['image_base64'], 'utf-8')
 
@@ -67,7 +53,7 @@ def inference(**inputs):
     #     print("Class:", obj['class'], "Score:", obj['score'], "BBox:", obj['bbox'])
 
     # Visualize the detections
-    v = Visualizer(image[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1)
+    v = Visualizer(image[:, :, ::-1], metadata, scale=1)
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
     cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
     print("output image saved")
@@ -87,20 +73,18 @@ if __name__ == "__main__":
     import base64
     import numpy as np
     # Load the input image
-    image_name = 'example.jpeg'
+    image_name = './pvc/example.jpeg'
 
     # encode image base64
     retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
     text = str(base64.b64encode(buffer).decode('utf-8'))
 
     result = inference(image_base64=text)
-    print(result)
 
     # decode image base64
-    print(bytes(result['response'], 'utf-8'))
-    jpg_original = base64.b64decode(bytes(result['image'], 'utf-8'))
+    jpg_original = base64.b64decode(bytes(result['response'], 'utf-8'))
     image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
-    cv2.imwrite('output.png', image)
+    cv2.imwrite('./pvc/received_output.png', image)
 
     
 
