@@ -187,6 +187,8 @@ def do_train(cfg, model, resume=False):
             storage.put_scalar("lr", optimizer.param_groups[0]["lr"], smoothing_hint=False)
             scheduler.step()
 
+            periodic_checkpointer.step(iteration)
+
             if (
                 cfg.TEST.EVAL_PERIOD > 0
                 and (iteration + 1) % cfg.TEST.EVAL_PERIOD == 0
@@ -203,7 +205,6 @@ def do_train(cfg, model, resume=False):
             ):
                 for writer in writers:
                     writer.write()
-            periodic_checkpointer.step(iteration)
 
 
 def setup(args):
