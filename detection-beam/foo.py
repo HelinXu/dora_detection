@@ -5,7 +5,7 @@ import base64
 import cv2
 import numpy as np
 
-image_name = 'cqsl.jpg'
+image_name = 'pvc/example.jpeg'
 
 # encode image base64
 retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
@@ -40,6 +40,8 @@ response = requests.request("POST", url,
 # get the dict
 response = response.json()
 
+print(response)
+
 jpg_as_text = bytes(response['response'], 'utf-8')
 
 jpg_original = base64.b64decode(jpg_as_text)
@@ -49,4 +51,4 @@ jpg_original = base64.b64decode(jpg_as_text)
 image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
 
 # save image
-cv2.imwrite('outputtt.png', image)
+cv2.imwrite('outputt.png', image)
