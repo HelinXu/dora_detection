@@ -65,6 +65,7 @@ def visualize(dataset_name='valid_ui', cfg=None, num=4, iter=0):
             tmp_cfg = copy.deepcopy(cfg)
             tmp_cfg.defrost()
             tmp_cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, last_checkpoint)
+            tmp_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
             predictor = DefaultPredictor(tmp_cfg)
             outputs = predictor(img)
             visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
