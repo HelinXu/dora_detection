@@ -1,13 +1,20 @@
 # dora_detection
 
-# Setup
+# Detectron2 for Dora Design
 
-- torch 1.10
-- cuda 11.3
+Author: Helin Xu xuhelin1911@gmail.com
 
-```
-python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html
-```
+## Requirements
+
+- Python >= 3.8
+- PyTorch 1.10
+- CUDA 11.3
+- Detectron2 0.6 (Install by `python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html`)
+- icecream (Install by `pip install icecream==2.1.3`)
+
+
+## Personal Notes
+
 
 put ui dataset at /root/autodl-tmp/ui_dataset
 
