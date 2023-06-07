@@ -22,6 +22,7 @@ metadata = Metadata(thing_classes=["Container", "Text", "Image", "Icon"])
 predictor = DefaultPredictor(cfg)
 
 def inference(**inputs):
+    print('Start of inference')
 
     jpg_as_text = bytes(inputs['image_base64'], 'utf-8')
 
@@ -29,16 +30,16 @@ def inference(**inputs):
     jpg_original = base64.b64decode(jpg_as_text)
 
     image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
-    # save current image
-    cv2.imwrite('pvc/current_image.png', image)
-    print("current image saved")
+    # # save current image
+    # cv2.imwrite('pvc/current_image.png', image)
+    print("Image Decoded")
 
     # Run inference
     outputs = predictor(image)
 
     # Get the predicted instances
     instances = outputs['instances']
-    print("inst number:", len(instances))
+    print("inst number detected:", len(instances))
 
     # Get the detected objects and their scores
     detected_objects = []
@@ -56,8 +57,8 @@ def inference(**inputs):
     # Visualize the detections
     v = Visualizer(image[:, :, ::-1], metadata, scale=1)
     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-    cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
-    print("output image saved")
+    # cv2.imwrite('pvc/output.png', v.get_image()[:, :, ::-1])
+    print("output image generated")
 
     # encode image base64
     retval, buffer = cv2.imencode('.png', v.get_image()[:, :, ::-1])
@@ -66,6 +67,7 @@ def inference(**inputs):
     results = {
         "response": return_image_text
     }
+    print('End of inference')
     return results
 
 

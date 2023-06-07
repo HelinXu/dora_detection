@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import time
 
-image_name = 'example.jpeg'
+image_name = 'pvc/example.jpeg'
 
 # encode image base64
 retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))

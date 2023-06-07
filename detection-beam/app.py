@@ -5,9 +5,9 @@ import beam
 
 app = beam.App(
     name="dora-detection-1",
-    cpu=1,
+    cpu=4,
     memory="16Gi",
-    # gpu=1, # TODO
+    gpu='A10G',
     python_version="python3.10",
     python_packages=[
     ],
