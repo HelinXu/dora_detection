@@ -4,24 +4,15 @@ import json
 import base64
 import cv2
 import numpy as np
+import time
 
-image_name = 'cqsl.jpg'
+image_name = 'example.jpeg'
 
 # encode image base64
 retval, buffer = cv2.imencode('.jpg', cv2.imread(image_name))
 text = str(base64.b64encode(buffer).decode('utf-8'))
-# print(type(text))
 
-# jpg_as_text = bytes(text, 'utf-8')
-
-# # decode image base64
-# jpg_original = base64.b64decode(jpg_as_text)
-
-# image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
-
-# # save image
-# cv2.imwrite('output.png', image)
-
+# sent the image to the app on web
 url = "https://apps.beam.cloud/yt8b8"
 payload = {"image_base64": text}
 headers = {
@@ -32,21 +23,24 @@ headers = {
   "Content-Type": "application/json"
 }
 
+tic = time.time()
+
 response = requests.request("POST", url, 
   headers=headers,
   data=json.dumps(payload)
 )
+toc = time.time()
 
-# get the dict
+print("time:", toc - tic)
+
+# save the returned results
 response = response.json()
 
 jpg_as_text = bytes(response['response'], 'utf-8')
 
 jpg_original = base64.b64decode(jpg_as_text)
 
-# print(jpg_original, type(jpg_original))
-
 image = cv2.imdecode(np.frombuffer(jpg_original, dtype=np.uint8), -1)
 
 # save image
-cv2.imwrite('outputtt.png', image)
+cv2.imwrite('outputt.png', image)
