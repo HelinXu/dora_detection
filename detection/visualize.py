@@ -9,19 +9,25 @@ import random
 
 
 # Define the dataset and metadata
-dataset_name = "dora_data"
+dataset_name = "dora_train"
 # dataset_path = "/path/to/dora_data"
 # metadata = MetadataCatalog.get(dataset_name)
 
 # Register the dataset
-datasets.register_coco_instances("dora_data", {},
+datasets.register_coco_instances("dora_font", {},
                                 f"/root/autodl-tmp/dora_font_v1/test/test.json",
                                 f"/root/autodl-tmp/dora_font_v1/test")
+datasets.register_coco_instances("dora_train", {},
+                                f"/root/autodl-tmp/dora_dataset/train.json",
+                                f"/root/autodl-tmp/dora_dataset/train")
+datasets.register_coco_instances("dora_val", {},
+                                f"/root/autodl-tmp/dora_dataset/val.json",
+                                f"/root/autodl-tmp/dora_dataset/train")
 # MetadataCatalog.get(dataset_name).set(thing_classes=["A", "B", "C", "D"])  # Add the object classes
 metadata = MetadataCatalog.get(dataset_name)
 
 # Load the pre-trained model and config
-model_path = './output/model_0004999.pth'
+model_path = './output/model_0089999.pth'
 config_path = './configs/font.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
