@@ -11,6 +11,7 @@ from model import RegressionResNet
 model = RegressionResNet(out_channels=5)
 model.load_state_dict(torch.load('regression_resnet_model.pth'))
 model.eval()
+model.to('cuda')
 
 # Prepare the image for inference
 for i in range(1,20):
@@ -19,18 +20,19 @@ for i in range(1,20):
     w, h = image.size
     transform = transforms.ToTensor()
     image = transform(image)
-    image = image.unsqueeze(0)  # Add batch dimension
+    image = image.unsqueeze(0).to('cuda')  # Add batch dimension
 
     tic = time.time()
     # Perform inference
     with torch.no_grad():
-        output = model(image, torch.tensor(w).unsqueeze(0), torch.tensor(h).unsqueeze(0))
+        output = model(image, torch.tensor(w).unsqueeze(0).to('cuda'), torch.tensor(h).unsqueeze(0).to('cuda'))
 
     toc = time.time()
 
     print('time: ', toc - tic)
 
     # Retrieve the predicted labels
+    output = output.cpu()
     predicted_fontsize = output[0, 0].item() * 300
     predicted_fontweight = output[0, 1].item() * 10
     predicted_color_r = output[0, 2].item() * 300
