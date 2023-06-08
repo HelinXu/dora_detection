@@ -25,7 +25,7 @@ criterion = nn.MSELoss()
 # Define the dataset and dataloader (replace with your own implementation)
 dataset = ImageRegressionDataset(root_dir='/root/autodl-tmp/dora_font/', annotation_file='/root/autodl-tmp/dora_font/train/train.txt',
                                      transform=transforms.ToTensor())
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=256, shuffle=True)
 
 # Create an instance of the ResNet model
 model = RegressionResNet(out_channels=6)
