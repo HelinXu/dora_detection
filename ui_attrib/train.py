@@ -25,6 +25,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.0)
 # Training loop
 num_epochs = 50
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+assert torch.cuda.is_available(), "You need to enable GPU in order to train this model."
 model.to(device).to(torch.float32)
 
 for epoch in range(num_epochs):
