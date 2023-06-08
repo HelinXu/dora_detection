@@ -14,10 +14,10 @@ criterion = nn.MSELoss()
 # Define the dataset and dataloader (replace with your own implementation)
 dataset = ImageRegressionDataset(root_dir='/root/autodl-tmp/dora_font/', annotation_file='/root/autodl-tmp/dora_font/train/train.txt',
                                      transform=transforms.ToTensor())
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=256, shuffle=True)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=128, shuffle=True)
 
 # Create an instance of the ResNet model
-model = RegressionResNet(out_channels=6)
+model = RegressionResNet(out_channels=5)
 
 # Set up the optimizer
 optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.0)
@@ -29,14 +29,15 @@ model.to(device).to(torch.float32)
 
 for epoch in range(num_epochs):
     running_loss = 0.0
-    for i, (images, fontsize, fontweight, color_r, color_g, color_b, color_a) in enumerate(dataloader):
+    for i, (images, w, h, fontsize, fontweight, color_r, color_g, color_b) in enumerate(dataloader):
         images = images.to(device)
         fontsize = fontsize.to(device).to(torch.float32)
         fontweight = fontweight.to(device).to(torch.float32)
         color_r = color_r.to(device).to(torch.float32)
         color_g = color_g.to(device).to(torch.float32)
         color_b = color_b.to(device).to(torch.float32)
-        color_a = color_a.to(device).to(torch.float32)
+        w = w.to(device).to(torch.float32)
+        h = h.to(device).to(torch.float32)
 
         # # assert the inputs
         # assert torch.max(fontsize) <= 1.0
@@ -60,12 +61,12 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # Forward pass
-        outputs = model(images)
+        outputs = model(images, w, h)
 
         # print(outputs)
         
         # Calculate the loss
-        loss = criterion(outputs[:, 0], fontsize) + criterion(outputs[:, 1], fontweight) + criterion(outputs[:, 2], color_r) + criterion(outputs[:, 3], color_g) + criterion(outputs[:, 4], color_b) + criterion(outputs[:, 5], color_a)
+        loss = criterion(outputs[:, 0], fontsize) + criterion(outputs[:, 1], fontweight) + criterion(outputs[:, 2], color_r) + criterion(outputs[:, 3], color_g) + criterion(outputs[:, 4], color_b)
 
         # Backward and optimize
         loss.backward()

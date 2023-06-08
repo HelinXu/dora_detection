@@ -24,11 +24,14 @@ class ImageRegressionDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
+        #   [file] [fontSize] [fontWeight] [r] [g] [b] [a]
         image_name, labels = self.data[index]
 
         # Load image
         image_path = os.path.join(self.root_dir, image_name)
         image = Image.open(image_path).convert('RGB')
+
+        width, height = image.size
 
         # resize the image to be 224x224
         image = image.resize((224, 224))
@@ -37,7 +40,7 @@ class ImageRegressionDataset(Dataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, labels[0]/300, labels[1]/1000, labels[2]/300, labels[3]/300, labels[4]/300, labels[5]/300
+        return image, width, height, labels[0]/300, labels[1]/1000, labels[2]/300, labels[3]/300, labels[4]/300
 
 
 if __name__ == '__main__':

@@ -1,7 +1,5 @@
 import torch
 import cv2
-from torchvision.models import resnet50
-import torch.nn as nn
 import time
 import numpy as np
 from PIL import Image
@@ -10,14 +8,15 @@ from model import RegressionResNet
 
 
 # Load the trained model
-model = RegressionResNet(out_channels=6)
+model = RegressionResNet(out_channels=5)
 model.load_state_dict(torch.load('regression_resnet_model.pth'))
 model.eval()
 
 # Prepare the image for inference
 for i in range(1,100):
-    image_path = f'/root/autodl-tmp/dora_font/train/{i}.png'  # Replace with the path to your image
+    image_path = f'/root/autodl-tmp/dora_font/test/{i}.png'  # Replace with the path to your image
     image = Image.open(image_path).convert('RGB')
+    w, h = image.size
     transform = transforms.ToTensor()
     image = transform(image)
     image = image.unsqueeze(0)  # Add batch dimension
@@ -25,7 +24,7 @@ for i in range(1,100):
     tic = time.time()
     # Perform inference
     with torch.no_grad():
-        output = model(image)
+        output = model(image, torch.tensor(w).unsqueeze(0), torch.tensor(h).unsqueeze(0))
 
     toc = time.time()
 
