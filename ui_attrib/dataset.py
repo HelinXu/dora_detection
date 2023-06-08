@@ -41,7 +41,7 @@ class ImageRegressionDataset(Dataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, width, height, labels[0]/300, labels[1]/1000, labels[2]/300, labels[3]/300, labels[4]/300
+        return image, width, height, labels[0]/width, labels[1]/sqrt(width*height)/150, labels[2]/300, labels[3]/300, labels[4]/300
 
 
 if __name__ == '__main__':
@@ -53,8 +53,36 @@ if __name__ == '__main__':
     dataset = ImageRegressionDataset(root_dir='/root/autodl-tmp/dora_font/', annotation_file='/root/autodl-tmp/dora_font/train/train.txt',
                                      transform=transforms.ToTensor())
 
-    # iter through the dataset to make sure it works
+    # iter through the dataset to make sure it works, plot the histogram of the labels
+    fontsize = []
+    fontweight = []
+    color_r = []
+    color_g = []
+    color_b = []
     for i in range(len(dataset)):
-        image, fontsize, fontweight, color_r, color_g, color_b, color_a = dataset[i]
-        assert color_a <= 1.0, (fontsize, fontweight, color_r, color_g, color_b, color_a)
-        print(image.shape, fontsize, fontweight, color_r, color_g, color_b, color_a)
+        image, w, h, f, fw, r, g, b = dataset[i]
+        fontsize.append(f)
+        fontweight.append(fw)
+        color_r.append(r)
+        color_g.append(g)
+        color_b.append(b)
+        # print(image.shape, w, h, f, fw, r, g, b)
+        # plt.imshow(image.permute(1, 2, 0))
+        # plt.show()
+    plt.hist(fontsize)
+    # save the histogram
+    plt.savefig('fontsize.png')
+    plt.clf()
+    plt.hist(fontweight)
+    plt.savefig('fontweight.png')
+    plt.clf()
+    plt.hist(color_r)
+    plt.savefig('color_r.png')
+    plt.clf()
+    plt.hist(color_g)
+    plt.savefig('color_g.png')
+    plt.clf()
+    plt.hist(color_b)
+    plt.savefig('color_b.png')
+    plt.clf()
+

@@ -62,7 +62,7 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # Forward pass
-        outputs = model(images, w, h)
+        outputs = model(images)
 
         # print(outputs)
         
