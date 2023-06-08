@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 from torch.utils.data import Dataset
+from math import sqrt
 
 class ImageRegressionDataset(Dataset):
     def __init__(self, root_dir, annotation_file, transform=None):

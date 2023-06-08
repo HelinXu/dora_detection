@@ -11,5 +11,6 @@ class RegressionResNet(nn.Module):
     def forward(self, x, w, h):
         x = self.resnet(x)
         x = torch.cat((x, w.unsqueeze(1), h.unsqueeze(1)), dim=1)
+        x = self.fc(x)
         x = torch.sigmoid(x)
         return x
