@@ -57,8 +57,11 @@ def visualize(dataset_name='valid_ui', cfg=None, num=4, iter=0):
         gt = vis.get_image()[:, :, ::-1]
 
         # read last_checkpoint
-        with open(os.path.join(cfg.OUTPUT_DIR, 'last_checkpoint'), 'r') as f:
-            last_checkpoint = f.read()
+        if os.path.exists(os.path.join(cfg.OUTPUT_DIR, 'last_checkpoint')):
+            with open(os.path.join(cfg.OUTPUT_DIR, 'last_checkpoint'), 'r') as f:
+                last_checkpoint = f.read()
+        else:
+            last_checkpoint = 'none'
         if os.path.exists(os.path.join(cfg.OUTPUT_DIR, last_checkpoint)):
             print(f'last_checkpoint: {last_checkpoint}')
             ckpt_iter = last_checkpoint.split('_')[-1].split('.')[0]

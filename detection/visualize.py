@@ -34,7 +34,7 @@ datasets.register_coco_instances("test_dora_real", {},
 metadata = MetadataCatalog.get(dataset_names[3])
 
 # Load the pre-trained model and config
-model_path = './output/model_0054999.pth'
+model_path = './output/model_0049999.pth'
 config_path = './configs/sim.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
