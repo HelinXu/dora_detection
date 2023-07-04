@@ -7,9 +7,13 @@ from detectron2.engine import DefaultPredictor
 import cv2
 import random
 
+from icecream import ic, install
+install()
+ic.configureOutput(includeContext=True, contextAbsPath=True)
+
 data_root = '/root/autodl-tmp'
 
-dataset_names = ['train_dora_sim', 'test_dora_sim', 'train_dora_real', 'test_dora_real']
+dataset_names = ['train_dora_sim', 'test_dora_sim',]# 'train_dora_real', 'test_dora_real']
 # Register the dataset
 datasets.register_coco_instances("train_ui", {},
                                 f"{data_root}/ui_dataset/train/_annotations.coco.json",
@@ -30,17 +34,18 @@ datasets.register_coco_instances("test_dora_real", {},
                                     f"{data_root}/dora_real/val.json",
                                     f"{data_root}/dora_real")
 
-# MetadataCatalog.get(dataset_name).set(thing_classes=["A", "B", "C", "D"])  # Add the object classes
-metadata = MetadataCatalog.get(dataset_names[3])
+# MetadataCatalog.get(dataset_name).set(thing_classes=["A", "B", "C", "D", "E"])  # Add the object classes
+metadata = MetadataCatalog.get(dataset_names[1])
 
 # Load the pre-trained model and config
-model_path = './output/model_0049999.pth'
-config_path = './configs/sim.yaml'
+model_path = './output/model_0039999.pth'
+config_path = './configs/sim_5classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
-cfg.MODEL.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.75  # Adjust the threshold as needed
+cfg.MODEL.DEVICE = 'cpu'
+ic(cfg)
 
 # Create the predictor
 predictor = DefaultPredictor(cfg)
@@ -52,7 +57,7 @@ for dataset_name in dataset_names:
     # Load a random image from the dataset
     dataset_dicts = DatasetCatalog.get(dataset_name)
 
-    for i in range(5):
+    for i in range(30):
         random_image = random.choice(dataset_dicts)
         image_path = random_image["file_name"]
         image = cv2.imread(image_path)
@@ -79,7 +84,8 @@ for dataset_name in dataset_names:
         vis = cv2.hconcat([pred, gt])
         # then add labels
         vis = cv2.putText(vis, 'Prediction', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-        vis = cv2.putText(vis, 'Ground Truth', (pred.shape[1] + 20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        # vis = cv2.putText(vis, 'Ground Truth', (pred.shape[1] + 20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        vis = cv2.putText(vis, image_path.split('/')[-2] + image_path.split('/')[-1], (pred.shape[1] + 20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imwrite(f'./output/{dataset_name}_{i}.jpg', vis)
 
