@@ -27,4 +27,7 @@ for i in range(num_to_visualize):
     # Also, visualize the ground truth
     v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1.2)
     out = v.draw_dataset_dict(random_image)
-    cv2.imwrite(f"imgs/0gt_{i}.jpg", out.get_image()[:, :, ::-1])
+    pred = out.get_image()[:, :, ::-1]
+    pred = cv2.copyMakeBorder(pred, 60, 10, 10, 10, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+    out = cv2.putText(pred, image_path.split('/')[-2] + image_path.split('/')[-1], (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+    cv2.imwrite(f"imgs/gt_{image_path.split('/')[-2] + image_path.split('/')[-1]}.jpg", out)
