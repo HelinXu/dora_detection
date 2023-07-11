@@ -12,14 +12,15 @@ from icecream import ic, install
 install()
 ic.configureOutput(includeContext=True, contextAbsPath=True)
 
+datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
 # Load the pre-trained model and config
-model_path = './output/model_final.pth'
+model_path = './output/model_0054999.pth'
 config_path = './configs/sim_5classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.75  # Adjust the threshold as needed
 cfg.MODEL.DEVICE = 'cpu'
 ic(cfg)
 
@@ -28,7 +29,7 @@ predictor = DefaultPredictor(cfg)
 
 image_paths = os.listdir(datasetpath)
 
-metadata = Metadata().set(thing_classes=["A", "B", "C", "D", "E"])  # Add the object classes
+metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para."])  # Add the object classes
 
 if not os.path.exists('./output/imgs'):
     os.mkdir('./output/imgs')
