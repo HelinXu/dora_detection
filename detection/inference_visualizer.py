@@ -14,9 +14,10 @@ ic.configureOutput(includeContext=True, contextAbsPath=True)
 
 datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
+datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
-model_path = './output/model_0054999.pth'
-config_path = './configs/sim_5classes.yaml'
+model_path = './output/model_0019999.pth'
+config_path = './configs/sim_11classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
@@ -29,7 +30,7 @@ predictor = DefaultPredictor(cfg)
 
 image_paths = os.listdir(datasetpath)
 
-metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para."])  # Add the object classes
+metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para.", "Bg.", "IrImg.", "BgImg.", "CtPil.", "CtCir.", "ImgCir."])  # Add the object classes
 
 if not os.path.exists('./output/imgs'):
     os.mkdir('./output/imgs')
