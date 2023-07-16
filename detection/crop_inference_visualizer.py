@@ -15,14 +15,14 @@ ic.configureOutput(includeContext=True, contextAbsPath=True)
 
 datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
-datasetpath = '/root/autodl-tmp/dora_sim/test'
+# datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
 model_path = './output/model_0019999.pth'
 config_path = './configs/sim_11classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.75  # Adjust the threshold as needed
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
 cfg.MODEL.DEVICE = 'cuda'
 ic(cfg)
 
@@ -45,7 +45,7 @@ for image_path in image_paths:
 
     image = cv2.imread(os.path.join(datasetpath, image_path))
 
-    grid_canvas_ = grid_canvas(image, ratio=0.5)
+    grid_canvas_ = grid_canvas(image, ratio=0.75)
     ic(grid_canvas_.canvas_size)
     vis = grid_canvas_.draw_grid_prediction(predictor, metadata)
 
