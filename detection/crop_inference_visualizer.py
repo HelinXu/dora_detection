@@ -41,17 +41,41 @@ for image_path in image_paths:
     # Load a random image from the dataset
 
     image = cv2.imread(os.path.join(datasetpath, image_path))
+
+    # img shape
+    img_h, img_w, _ = image.shape
+
+    # random choose a square that is 50% the size of shorter edge
+    square_size = int(min(img_h, img_w) * 0.5)
+    x1 = random.randint(0, img_w - square_size)
+    y1 = random.randint(0, img_h - square_size)
+    x2 = x1 + square_size
+    y2 = y1 + square_size
+
+    square = image[y1:y2, x1:x2]
+
     imagename = image_path.split('/')[-1]
 
     # Run inference
     outputs = predictor(image)
+    square_outputs = predictor(square)
 
     # Visualize the predictions
     v = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1)
     out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
 
+    v_ = Visualizer(square[:, :, ::-1], metadata=metadata, scale=1)
+    out_ = v_.draw_instance_predictions(square_outputs["instances"].to("cpu"))
+
     # Save the visualization
     pred = out.get_image()[:, :, ::-1]
+    pred_ = out_.get_image()[:, :, ::-1]
+
+    # overlap pred_ on pred
+    pred[y1:y2, x1:x2] = pred_
+
+    # draw a black rectangle on pred
+    cv2.rectangle(pred, (x1, y1), (x2, y2), (0, 0, 0), 2)
 
     # first add some padding to the images
     pred = cv2.copyMakeBorder(pred, 60, 10, 10, 10, cv2.BORDER_CONSTANT, value=(255, 255, 255))
