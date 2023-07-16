@@ -7,6 +7,8 @@
 
 # random import
 import random
+from detectron2.utils.visualizer import Visualizer
+import numpy as np
 
 class Square(object):
     def __init__(self, x1, y1, a):
@@ -46,4 +48,50 @@ class grid_layout(object):
         if y2 > self.w:
             y2 = self.w
             y1 = self.w - self.a
-        return Square(x1, y1, x2, y2)
+        return Square(x1, y1, self.a)
+
+
+class grid_canvas(object):
+    def __init__(self, origin_image, ratio=0.5):
+        self.image = origin_image
+        self.h, self.w, c = self.image.shape
+        self.layout = grid_layout(self.h, self.w, ratio)
+        self.squares = []
+        self.square_imgs = []
+        for i in range(self.layout.h_grids):
+            for j in range(self.layout.w_grids):
+                self.squares.append(self.layout.get_square(i, j))
+                # ic the shape
+                # ic(self.squares[-1].x1 - self.squares[-1].x2, self.squares[-1].y1 - self.squares[-1].y2)
+                self.square_imgs.append(
+                    self.image[self.squares[-1].x1 : self.squares[-1].x2, self.squares[-1].y1 : self.squares[-1].y2].copy()
+                )
+                # ic(self.square_imgs[-1].shape)
+        self.canvas_size = (self.layout.h_grids * self.layout.a, self.layout.w_grids * self.layout.a * 2, c)
+        
+    def draw_grid_prediction(self, predictor, metadata):
+        # Run inference
+        outputs = predictor(self.image)
+        # Visualize the predictions
+        v = Visualizer(self.image[:, :, ::-1], metadata=metadata, scale=1)
+        out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+        # Save the visualization
+        pred = out.get_image()[:, :, ::-1]
+        grid_preds = []
+        for square_img in self.square_imgs:
+            # ic(square_img.shape)
+            outputs = predictor(square_img)
+            v = Visualizer(square_img[:, :, ::-1], metadata=metadata, scale=1)
+            out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+            grid_preds.append(out.get_image()[:, :, ::-1])
+        # use opencv to draw the grid of predictions
+        output_image = np.zeros(self.canvas_size, dtype=np.uint8)
+        for i in range(self.layout.h_grids):
+            for j in range(self.layout.w_grids):
+                output_image[ \
+                    self.squares[i * self.layout.w_grids + j].x1 : self.squares[i * self.layout.w_grids + j].x2, \
+                        self.squares[i * self.layout.w_grids + j].y1 : self.squares[i * self.layout.w_grids + j].y2] = \
+                    grid_preds[i * self.layout.w_grids + j]
+        # fill the rest of the canvas with the original image
+        # output_image[0 : self.h, 0 : self.w] = self.image
+        return output_image
