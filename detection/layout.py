@@ -9,6 +9,7 @@
 import random
 from detectron2.utils.visualizer import Visualizer
 import numpy as np
+import cv2
 
 class Square(object):
     def __init__(self, x1, y1, a):
@@ -93,10 +94,18 @@ class grid_canvas(object):
         output_image = np.zeros(self.canvas_size, dtype=np.uint8)
         for i in range(self.layout.h_grids):
             for j in range(self.layout.w_grids):
-                output_image[ \
-                    self.squares[i * self.layout.w_grids + j].x1 : self.squares[i * self.layout.w_grids + j].x2, \
-                        self.squares[i * self.layout.w_grids + j].y1 : self.squares[i * self.layout.w_grids + j].y2] = \
-                    grid_preds[i * self.layout.w_grids + j]
-        # fill the rest of the canvas with the original image
-        output_image[0 : self.h, self.layout.w_grids * self.layout.a : self.layout.w_grids * self.layout.a + self.w] = pred
+                output_image[   i * self.layout.a : (i + 1) * self.layout.a, \
+                                j * self.layout.a : (j + 1) * self.layout.a] = grid_preds[i * self.layout.w_grids + j]
+        
+        # draw the grid
+        for i in range(self.layout.h_grids):
+            cv2.line(output_image, (0, i * self.layout.a), (self.layout.w_grids * self.layout.a, i * self.layout.a), (255, 255, 255), 3)
+        for j in range(self.layout.w_grids):
+            cv2.line(output_image, (j * self.layout.a, 0), (j * self.layout.a, self.layout.h_grids * self.layout.a), (255, 255, 255), 3)
+
+
+        # fill the rest of the canvas with the original image, centered
+        # output_image[0 : self.h, self.layout.w_grids * self.layout.a : self.layout.w_grids * self.layout.a + self.w] = pred
+        output_image[int((self.canvas_size[0] - self.h) / 2) : int((self.canvas_size[0] + self.h) / 2), \
+                     self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a - self.w) / 2) : self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a + self.w) / 2)] = pred
         return output_image
