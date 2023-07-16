@@ -19,9 +19,10 @@ class Square(object):
 
 
 class grid_layout(object):
-    def __init__(self, h, w, ratio=0.25):
+    def __init__(self, h, w, ratio=0.25, random=False):
         self.h = h
         self.w = w
+        self.random = random
         self.a = int(min(h, w) * ratio)
         self.h_grids = int((h - 1) / self.a) + 1
         self.w_grids = int((w - 1) / self.a) + 1
@@ -31,8 +32,12 @@ class grid_layout(object):
         )
     
     def get_square(self, i, j):
-        x1 = int(self.grid_o[0] + i * self.a - random.randint(0, self.a))
-        y1 = int(self.grid_o[1] + j * self.a - random.randint(0, self.a))
+        if self.random:
+            x1 = int(self.grid_o[0] + i * self.a - random.randint(0, self.a))
+            y1 = int(self.grid_o[1] + j * self.a - random.randint(0, self.a))
+        else:
+            x1 = int(self.grid_o[0] + i * self.a - self.a / 2)
+            y1 = int(self.grid_o[1] + j * self.a - self.a / 2)
         x2 = x1 + self.a
         y2 = y1 + self.a
         # clip if out of bound
@@ -93,5 +98,5 @@ class grid_canvas(object):
                         self.squares[i * self.layout.w_grids + j].y1 : self.squares[i * self.layout.w_grids + j].y2] = \
                     grid_preds[i * self.layout.w_grids + j]
         # fill the rest of the canvas with the original image
-        # output_image[0 : self.h, 0 : self.w] = self.image
+        output_image[0 : self.h, self.layout.w_grids * self.layout.a : self.layout.w_grids * self.layout.a + self.w] = pred
         return output_image
