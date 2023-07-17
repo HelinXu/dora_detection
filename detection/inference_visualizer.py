@@ -14,14 +14,14 @@ ic.configureOutput(includeContext=True, contextAbsPath=True)
 
 datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
-datasetpath = '/root/autodl-tmp/dora_sim/test'
+# datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
 model_path = './output/model_0019999.pth'
 config_path = './configs/sim_11classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.75  # Adjust the threshold as needed
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.6  # Adjust the threshold as needed
 cfg.MODEL.DEVICE = 'cpu'
 ic(cfg)
 
@@ -65,23 +65,16 @@ for image_path in image_paths:
 
     cv2.imwrite(f'./output/imgs/pred_{imagename}.jpg', vis)
 
+    # save the predictions
+    instances = outputs["instances"].to("cpu")
+    boxes = instances.pred_boxes.tensor.numpy()
+    classes = instances.pred_classes.numpy()
+    labels = [metadata.thing_classes[i] for i in classes]
+    scores = instances.scores.numpy()
+    with open(f'./output/imgs/pred_{imagename}.txt', 'w') as f:
+        for lab, box, cls, score in zip(labels, boxes, classes, scores):
+            f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
+    
+    # copy the original image
+    os.system(f'cp "{os.path.join(datasetpath, image_path)}" "./output/imgs/{imagename}"')
 
-# # finally, concatenate all the images by dataset name
-# import numpy as np
-# import cv2
-# for dataset_name in dataset_names:
-#     images = []
-#     for i in range(3):
-#         img = cv2.imread(f'./output/{dataset_name}_{i}.jpg')
-#         # resize the img to be 1000xN
-#         img = cv2.resize(img, (1000, int(img.shape[0] * 1000 / img.shape[1])))
-#         images.append(img)
-#     vis = cv2.vconcat(images)
-#     cv2.imwrite(f'./output/{dataset_name}.jpg', vis)
-
-
-# # remove the individual images
-# import os
-# for dataset_name in dataset_names:
-#     for i in range(3):
-#         os.remove(f'./output/{dataset_name}_{i}.jpg')
