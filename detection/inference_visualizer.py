@@ -16,13 +16,13 @@ datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
 # datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
-model_path = './output/model_0019999.pth'
+model_path = './output/model_0039999.pth'
 config_path = './configs/sim_11classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.6  # Adjust the threshold as needed
-cfg.MODEL.DEVICE = 'cpu'
+cfg.MODEL.DEVICE = 'cuda'
 ic(cfg)
 
 # Create the predictor

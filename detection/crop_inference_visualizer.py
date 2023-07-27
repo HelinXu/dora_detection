@@ -17,7 +17,7 @@ datasetpath = '/root/autodl-tmp/real'
 datasetpath = '/root/autodl-tmp/DoraAIGC'
 # datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
-model_path = './output/model_0019999.pth'
+model_path = './output/model_0039999.pth'
 config_path = './configs/sim_11classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)

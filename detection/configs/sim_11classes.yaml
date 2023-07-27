@@ -16,4 +16,4 @@ DATASETS:
   TRAIN: ("train_dora_sim",)
   TEST: ("test_dora_sim",)
 SOLVER:
-  IMS_PER_BATCH: 128
+  IMS_PER_BATCH: 32
