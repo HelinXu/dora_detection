@@ -11,6 +11,9 @@ from detectron2.utils.visualizer import Visualizer
 import numpy as np
 import cv2
 
+import time
+
+
 class Square(object):
     def __init__(self, x1, y1, a):
         self.x1 = x1
@@ -75,7 +78,7 @@ class grid_canvas(object):
                 # ic(self.square_imgs[-1].shape)
         self.canvas_size = (self.layout.h_grids * self.layout.a, self.layout.w_grids * self.layout.a * 2, c)
         
-    def draw_grid_prediction(self, predictor, metadata):
+    def draw_grid_prediction(self, predictor, metadata, save=False):
         # Run inference
         outputs = predictor(self.image)
         # Visualize the predictions
@@ -90,6 +93,29 @@ class grid_canvas(object):
             v = Visualizer(square_img[:, :, ::-1], metadata=metadata, scale=1)
             out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
             grid_preds.append(out.get_image()[:, :, ::-1])
+
+            # draw the original image and write the predictions to txt
+            '''
+    boxes = instances.pred_boxes.tensor.numpy()
+    classes = instances.pred_classes.numpy()
+    labels = [metadata.thing_classes[i] for i in classes]
+    scores = instances.scores.numpy()
+    with open(f'./output/imgs/pred_{imagename}.txt', 'w') as f:
+        for lab, box, cls, score in zip(labels, boxes, classes, scores):
+            f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
+            '''
+            bbox = outputs["instances"].pred_boxes.tensor.cpu().numpy()
+            classes = outputs["instances"].pred_classes.cpu().numpy()
+            labels = [metadata.thing_classes[i] for i in classes]
+            scores = outputs["instances"].scores.cpu().numpy()
+            name = str(time.time())
+            with open(f'./output/imgs/{name}.txt', 'w') as f:
+                for lab, box, cls, score in zip(labels, bbox, classes, scores):
+                    f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
+            cv2.imwrite(f'./output/imgs/{name}.png', square_img)
+            cv2.imwrite(f'./output/imgs/{name}_pred.png', grid_preds[-1])
+
+
         # use opencv to draw the grid of predictions
         output_image = np.zeros(self.canvas_size, dtype=np.uint8)
         for i in range(self.layout.h_grids):
