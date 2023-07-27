@@ -45,15 +45,15 @@ for image_path in image_paths:
 
     image = cv2.imread(os.path.join(datasetpath, image_path))
 
-    grid_canvas_ = grid_canvas(image, ratio=0.75)
+    grid_canvas_ = grid_canvas(image, ratio=1)
     ic(grid_canvas_.canvas_size)
-    vis = grid_canvas_.draw_grid_prediction(predictor, metadata)
-
-
     imagename = image_path.split('/')[-1]
+    vis = grid_canvas_.draw_grid_prediction(predictor, metadata, name=imagename)
+
+
 
     
-    cv2.imwrite(f'./output/imgs/pred_{imagename}.jpg', vis)
+    # cv2.imwrite(f'./output/imgs/pred_{imagename}.jpg', vis)
 
 
 # # finally, concatenate all the images by dataset name
