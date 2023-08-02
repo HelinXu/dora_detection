@@ -260,13 +260,13 @@ def refine_algo1(outputs, metadata, image):
         y1_ = center_y - (center_y - y1) * zoom_alpha
         y2_ = center_y + (y2 - center_y) * zoom_alpha
         # clip the bbox
-        x1_ = int(max(0, x1_))
-        x2_ = int(min(image.shape[0], x2_))
-        y1_ = int(max(0, y1_))
-        y2_ = int(min(image.shape[1], y2_))
-        
+        x1_ = max(0, x1_)
+        x2_ = min(image.shape[1], x2_)
+        y1_ = max(0, y1_)
+        y2_ = min(image.shape[0], y2_)
+
         # get the bbox's edges
-        bbox_edges = edges[int(x1_) : int(x2_), int(y1_) : int(y2_)]
+        bbox_edges = edges[int(y1_) : int(y2_), int(x1_) : int(x2_)]
 
         # find the square's edges
         # # horizontal
@@ -280,7 +280,7 @@ def refine_algo1(outputs, metadata, image):
         # use matplotlib to draw the histogram
         import matplotlib.pyplot as plt
         plt.plot(h_hist)
-        plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
+        # plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
         plt.savefig(f'{i}.hist.jpg')
         plt.close()
 
