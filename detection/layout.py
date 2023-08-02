@@ -227,31 +227,14 @@ def refine_algo1(outputs, metadata, image):
         # build the responce map, use float
         responce_map = np.zeros_like(hist, dtype=np.float)
         # build the first responce as a normal distribution with delta = zoom_alpha - 1, centered at x1
-        delta = (zoom_alpha - 1) * (r - l)
-        ic(delta)
-        ic(l, r)
+        delta = (zoom_alpha - 1) * (r - l) / 2
         for i in range(len(hist)):
             responce_map[i] = np.exp(- (i - l) ** 2 / delta ** 2)
-            ic(np.exp(- (i - l) ** 2 / delta ** 2), (i - l) ** 2 / delta ** 2, l, i, delta)
         # build the second responce as a normal distribution with delta = zoom_alpha - 1, centered at x2
         for i in range(len(hist)):
             responce_map[i] += np.exp(- (i - r) ** 2 / delta ** 2)
-        ic(responce_map)
-        # import matplotlib.pyplot as plt
-        # normalize the responce map, make sure the types match
         # multiply with the hist
         responce_map *= hist
-        # responce_map = responce_map / np.sum(responce_map) * np.sum(hist)
-        # plt.close()
-        # # plt.plot(hist)
-        # plt.plot(responce_map)
-        # # add legend
-        # plt.legend(['responce'])
-        # plt.savefig(f'./tmp/{l}_{r}.hist.jpg')
-        # plt.close()
-        # exit()
-        # return the responce map
-        # plot the hist and the responce
         return responce_map
 
 
@@ -288,11 +271,18 @@ def refine_algo1(outputs, metadata, image):
         # pixel level histogram analysis to find the peak of horizontal and vertical lines
         # horizontal
         h_hist = np.sum(bbox_edges, axis=0)
+        h_hist = conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist)
+        H_hist_l = h_hist[:int((x2 - x1) / 2)]
+        H_hist_r = h_hist[int((x2 - x1) / 2):]
         # vertical
         v_hist = np.sum(bbox_edges, axis=1)
+        v_hist = conv_hist(y1 - y1_, y2 - y2_ + len(v_hist), zoom_alpha, v_hist)
+        V_hist_u = v_hist[:int((y2 - y1) / 2)]
+        V_hist_d = v_hist[int((y2 - y1) / 2):]
 
         # use matplotlib to draw the histogram
         import matplotlib.pyplot as plt
+        plt.close()
         plt.plot(h_hist)
         plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
         plt.savefig(f'./tmp/{i}.hist.jpg')
@@ -310,22 +300,25 @@ def refine_algo1(outputs, metadata, image):
         # # save image
         # cv2.imwrite(f'{i}.hist.jpg', bbox_edges)
 
-        # # find the peak
-        # h_peak = np.argmax(h_hist)
-        # v_peak = np.argmax(v_hist)
-        # # also find the second peak
-        # h_hist[h_peak] = 0
-        # v_hist[v_peak] = 0
-        # h_peak2 = np.argmax(h_hist)
-        # v_peak2 = np.argmax(v_hist)
-        # # draw them on the bbox_edges with red lines
-        # # first turn into BGR
-        # bbox_edges = cv2.cvtColor(bbox_edges, cv2.COLOR_GRAY2BGR)
-        # # draw the lines
-        # bbox_edges = cv2.line(bbox_edges, (h_peak, 0), (h_peak, bbox_edges.shape[0]), (0, 0, 255), 2)
-        # bbox_edges = cv2.line(bbox_edges, (0, v_peak), (bbox_edges.shape[1], v_peak), (0, 0, 255), 2)
-        # bbox_edges = cv2.line(bbox_edges, (h_peak2, 0), (h_peak2, bbox_edges.shape[0]), (0, 0, 255), 2)
-        # bbox_edges = cv2.line(bbox_edges, (0, v_peak2), (bbox_edges.shape[1], v_peak2), (0, 0, 255), 2)
+        # find the peak
+        H_peak_l = np.argmax(H_hist_l)
+        H_peak_r = np.argmax(H_hist_r) + int((x2 - x1) / 2)
+        V_peak_u = np.argmax(V_hist_u)
+        V_peak_d = np.argmax(V_hist_d) + int((y2 - y1) / 2)
+        # draw red lines through the bbox's edges
+        bbox_edges = cv2.cvtColor(bbox_edges, cv2.COLOR_GRAY2BGR)
+
+        # draw the bbox's edges
+        # bbox_edges = cv2.line(bbox_edges, (0, 0), (bbox_edges.shape[1], 0), (0, 0, 255), 1)
+        # bbox_edges = cv2.line(bbox_edges, (0, bbox_edges.shape[0]), (bbox_edges.shape[1], bbox_edges.shape[0]), (0, 0, 255), 1)
+        # bbox_edges = cv2.line(bbox_edges, (0, 0), (0, bbox_edges.shape[0]), (0, 0, 255), 1)
+        # bbox_edges = cv2.line(bbox_edges, (bbox_edges.shape[1], 0), (bbox_edges.shape[1], bbox_edges.shape[0]), (0, 0, 255), 1)
+
+
+        bbox_edges = cv2.line(bbox_edges, (H_peak_l, bbox_edges.shape[0]), (H_peak_l, 0), (0, 0, 255), 1)
+        bbox_edges = cv2.line(bbox_edges, (H_peak_r, bbox_edges.shape[0]), (H_peak_r, 0), (0, 0, 255), 1)
+        bbox_edges = cv2.line(bbox_edges, (0, V_peak_u), (bbox_edges.shape[1], V_peak_u), (0, 0, 255), 1)
+        bbox_edges = cv2.line(bbox_edges, (0, V_peak_d), (bbox_edges.shape[1], V_peak_d), (0, 0, 255), 1)
 
 
         # save the bbox's edges
