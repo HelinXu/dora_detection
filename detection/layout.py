@@ -224,20 +224,34 @@ zoom_alpha = 1.2
 def refine_algo1(outputs, metadata, image):
 
     def conv_hist(l, r, zoom_alpha, hist):
-        # peak at x1, x2; linearly slopt to zero on the other places
-        responce_map = np.zeros_like(hist)
+        # build the responce map, use float
+        responce_map = np.zeros_like(hist, dtype=np.float)
         # build the first responce as a normal distribution with delta = zoom_alpha - 1, centered at x1
-        delta = zoom_alpha - 1
+        delta = (zoom_alpha - 1) * (r - l)
+        ic(delta)
+        ic(l, r)
         for i in range(len(hist)):
             responce_map[i] = np.exp(- (i - l) ** 2 / delta ** 2)
+            ic(np.exp(- (i - l) ** 2 / delta ** 2), (i - l) ** 2 / delta ** 2, l, i, delta)
         # build the second responce as a normal distribution with delta = zoom_alpha - 1, centered at x2
         for i in range(len(hist)):
             responce_map[i] += np.exp(- (i - r) ** 2 / delta ** 2)
+        ic(responce_map)
+        # import matplotlib.pyplot as plt
         # normalize the responce map, make sure the types match
         # multiply with the hist
         responce_map *= hist
-        responce_map = responce_map / np.sum(responce_map) * np.sum(hist)
+        # responce_map = responce_map / np.sum(responce_map) * np.sum(hist)
+        # plt.close()
+        # # plt.plot(hist)
+        # plt.plot(responce_map)
+        # # add legend
+        # plt.legend(['responce'])
+        # plt.savefig(f'./tmp/{l}_{r}.hist.jpg')
+        # plt.close()
+        # exit()
         # return the responce map
+        # plot the hist and the responce
         return responce_map
 
 
@@ -280,8 +294,8 @@ def refine_algo1(outputs, metadata, image):
         # use matplotlib to draw the histogram
         import matplotlib.pyplot as plt
         plt.plot(h_hist)
-        # plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
-        plt.savefig(f'{i}.hist.jpg')
+        plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
+        plt.savefig(f'./tmp/{i}.hist.jpg')
         plt.close()
 
         # # draw the histogram on the horizontal and vertical edges respectively
@@ -315,13 +329,13 @@ def refine_algo1(outputs, metadata, image):
 
 
         # save the bbox's edges
-        cv2.imwrite(f'{i}.edges.jpg', bbox_edges)
+        cv2.imwrite(f'./tmp/{i}.edges.jpg', bbox_edges)
 
     # concat with original image
     edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
     edges = cv2.hconcat([image, edges])
     # save the edges
-    cv2.imwrite(f'.edges.jpg', edges)
+    cv2.imwrite(f'./tmp/edges.jpg', edges)
 
     exit()
 
