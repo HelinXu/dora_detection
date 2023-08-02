@@ -320,6 +320,12 @@ def refine_algo1(outputs, metadata, image):
         bbox_edges = cv2.line(bbox_edges, (0, V_peak_u), (bbox_edges.shape[1], V_peak_u), (0, 0, 255), 1)
         bbox_edges = cv2.line(bbox_edges, (0, V_peak_d), (bbox_edges.shape[1], V_peak_d), (0, 0, 255), 1)
 
+        # # draw on original image
+        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+        image = cv2.line(image, (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (0, 0, 255), 3)
+        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+
 
         # save the bbox's edges
         cv2.imwrite(f'./tmp/{i}.edges.jpg', bbox_edges)
