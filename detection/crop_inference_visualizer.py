@@ -32,6 +32,8 @@ ic(cfg)
 predictor = DefaultPredictor(cfg)
 
 image_paths = os.listdir(datasetpath)
+# shuffle the image paths
+random.shuffle(image_paths)
 
 metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para.", "Bg.", "IrImg.", "BgImg.", "CtPil.", "CtCir.", "ImgCir."])  # Add the object classes
 

@@ -95,6 +95,8 @@ class grid_canvas(object):
         # Run inference
         outputs = predictor(self.image)
 
+        refine_algo1(outputs, metadata, self.image)
+
         # full size
         full_size_output_insts = outputs["instances"]
         # remove those instances with small area
@@ -213,3 +215,114 @@ class grid_canvas(object):
         cv2.imwrite(f'./output/imgs/{name}', self.image)
 
         return output_image
+
+
+zoom_alpha = 1.2
+
+
+
+def refine_algo1(outputs, metadata, image):
+
+    def conv_hist(x1, x2, zoom_alpha, hist):
+        # peak at x1, x2; linearly slopt to zero on the other places
+        responce_map = np.zeros_like(hist)
+        # build the first responce as a normal distribution with delta = zoom_alpha - 1, centered at x1
+        delta = zoom_alpha - 1
+        for i in range(len(hist)):
+            responce_map[i] = np.exp(- (i - x1) ** 2 / delta ** 2)
+        # build the second responce as a normal distribution with delta = zoom_alpha - 1, centered at x2
+        for i in range(len(hist)):
+            responce_map[i] += np.exp(- (i - x2) ** 2 / delta ** 2)
+        # normalize
+        # responce_map /= np.max(responce_map)
+        # multiply with the hist
+        responce_map *= hist
+        # return the responce map
+        return responce_map
+
+
+    # full size
+    insts = outputs["instances"]
+    # use opencv to take the image's edges
+    edges = cv2.Canny(image, 1, 50)
+
+    for i in range(len(insts)):
+        inst = insts[i]
+        # get the bbox
+        bbox = inst.pred_boxes.tensor.cpu().numpy()
+        x1, y1, x2, y2 = bbox[0]
+        # center coord.
+        center_x = (x1 + x2) / 2
+        center_y = (y1 + y2) / 2
+        # scale up the bbox to 1.3x
+        x1_ = center_x - (center_x - x1) * zoom_alpha
+        x2_ = center_x + (x2 - center_x) * zoom_alpha
+        y1_ = center_y - (center_y - y1) * zoom_alpha
+        y2_ = center_y + (y2 - center_y) * zoom_alpha
+        # clip the bbox
+        x1_ = int(max(0, x1_))
+        x2_ = int(min(image.shape[0], x2_))
+        y1_ = int(max(0, y1_))
+        y2_ = int(min(image.shape[1], y2_))
+        
+        bbox_edges = edges[x1_ : x2_, y1_ : y2_]
+
+        # pixel level histogram analysis to find the peak of horizontal and vertical lines
+        # horizontal
+        h_hist = np.sum(bbox_edges, axis=0)
+        # vertical
+        v_hist = np.sum(bbox_edges, axis=1)
+
+        # use matplotlib to draw the histogram
+        import matplotlib.pyplot as plt
+        plt.plot(h_hist)
+        # plt.plot(conv_hist(0, x2 - x1, zoom_alpha, h_hist))
+
+        plt.savefig(f'{i}.hist.jpg')
+        plt.close()
+
+        # draw the histogram on the horizontal and vertical edges respectively
+        # first turn into BGR
+        bbox_edges = cv2.cvtColor(bbox_edges, cv2.COLOR_GRAY2BGR)
+        # draw the histogram
+        for i in range(len(h_hist)):
+            bbox_edges = cv2.line(bbox_edges, (i, bbox_edges.shape[0]), (i, bbox_edges.shape[0] - h_hist[i]), (0, 0, 255), 1)
+        for i in range(len(v_hist)):
+            bbox_edges = cv2.line(bbox_edges, (0, i), (v_hist[i], i), (0, 0, 255), 1)
+
+        # save image
+        cv2.imwrite(f'{i}.hist.jpg', bbox_edges)
+
+        # find the peak
+        h_peak = np.argmax(h_hist)
+        v_peak = np.argmax(v_hist)
+        # also find the second peak
+        h_hist[h_peak] = 0
+        v_hist[v_peak] = 0
+        h_peak2 = np.argmax(h_hist)
+        v_peak2 = np.argmax(v_hist)
+        # draw them on the bbox_edges with red lines
+        # first turn into BGR
+        bbox_edges = cv2.cvtColor(bbox_edges, cv2.COLOR_GRAY2BGR)
+        # draw the lines
+        bbox_edges = cv2.line(bbox_edges, (h_peak, 0), (h_peak, bbox_edges.shape[0]), (0, 0, 255), 2)
+        bbox_edges = cv2.line(bbox_edges, (0, v_peak), (bbox_edges.shape[1], v_peak), (0, 0, 255), 2)
+        bbox_edges = cv2.line(bbox_edges, (h_peak2, 0), (h_peak2, bbox_edges.shape[0]), (0, 0, 255), 2)
+        bbox_edges = cv2.line(bbox_edges, (0, v_peak2), (bbox_edges.shape[1], v_peak2), (0, 0, 255), 2)
+
+
+        # save the bbox's edges
+        cv2.imwrite(f'{i}.edges.jpg', bbox_edges)
+
+    # concat with original image
+    edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    edges = cv2.hconcat([image, edges])
+    # save the edges
+    cv2.imwrite(f'.edges.jpg', edges)
+
+    exit()
+
+
+# def detect_rectangle(edge_img, i):
+
+    # detect lines
