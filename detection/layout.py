@@ -99,7 +99,7 @@ class grid_canvas(object):
         full_size_output_insts = outputs["instances"]
         # remove those instances with small area
         areas = full_size_output_insts.pred_boxes.area().cpu().numpy()
-        keep = np.where(areas > 0.05 * self.h * self.w)[0]
+        keep = np.where(areas > 0.01 * self.h * self.w)[0]
         full_size_output_insts = full_size_output_insts[keep]
 
         # Visualize the predictions
@@ -134,7 +134,7 @@ class grid_canvas(object):
             output_insts.pred_boxes.tensor[:, 3] += square.x1
             ic(output_insts)
             areas = outputs["instances"].pred_boxes.area().cpu().numpy()
-            keep = np.where(areas < 0.05 * self.h * self.w)[0]
+            keep = np.where(areas < 0.01 * self.h * self.w)[0]
             ic(keep)
             # bbox = bbox[keep]
             # classes = classes[keep]
