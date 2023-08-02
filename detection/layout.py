@@ -6,6 +6,7 @@
 # ration : (0.2, 0.5)
 
 # random import
+from copy import copy, deepcopy
 import random
 from detectron2.utils.visualizer import Visualizer
 from detectron2.structures import Instances
@@ -126,25 +127,25 @@ class grid_canvas(object):
         for lab, box, cls, score in zip(labels, boxes, classes, scores):
             f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
             '''
-            ic(outputs["instances"])
+            # ic(outputs["instances"])
             output_insts = outputs["instances"]
             # output_insts.image_height = full_size_output_insts.image_height
-            ic(len(output_insts))
+            # ic(len(output_insts))
             output_insts.pred_boxes.tensor[:, 0] += square.y1
             output_insts.pred_boxes.tensor[:, 1] += square.x1
             output_insts.pred_boxes.tensor[:, 2] += square.y1
             output_insts.pred_boxes.tensor[:, 3] += square.x1
-            ic(output_insts)
+            # ic(output_insts)
             areas = outputs["instances"].pred_boxes.area().cpu().numpy()
             keep = np.where(areas < 0.01 * self.h * self.w)[0]
-            ic(keep)
+            # ic(keep)
             # bbox = bbox[keep]
             # classes = classes[keep]
             # labels = [metadata.thing_classes[i] for i in classes]
             # scores = scores[keep]
             output_insts = output_insts[keep]
-            ic(output_insts)
-            ic(len(output_insts))
+            # ic(output_insts)
+            # ic(len(output_insts))
 
             all_output_insts.append(output_insts)
             
@@ -182,7 +183,7 @@ class grid_canvas(object):
         all_output_insts = [inst.to("cpu") for inst in all_output_insts]
         full_size_output_insts._image_size = all_output_insts[0].image_size
         all_output_insts.append(full_size_output_insts.to("cpu"))
-        ic(all_output_insts[-1].image_size)
+        # ic(all_output_insts[-1].image_size)
         all_output_insts = Instances.cat(all_output_insts)
 
         # remove those instances with large area
@@ -240,8 +241,13 @@ def refine_algo1(outputs, metadata, image):
 
     # full size
     insts = outputs["instances"]
+    ori_insts = deepcopy(insts)
+    v1 = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1)
+    original_out = v1.draw_instance_predictions(ori_insts.to("cpu"))
     # use opencv to take the image's edges
     edges = cv2.Canny(image, 1, 50)
+
+    canny_insts = []
 
     for i in range(len(insts)):
         inst = insts[i]
@@ -320,19 +326,34 @@ def refine_algo1(outputs, metadata, image):
         bbox_edges = cv2.line(bbox_edges, (0, V_peak_u), (bbox_edges.shape[1], V_peak_u), (0, 0, 255), 1)
         bbox_edges = cv2.line(bbox_edges, (0, V_peak_d), (bbox_edges.shape[1], V_peak_d), (0, 0, 255), 1)
 
-        # # draw on original image
-        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (0, 0, 255), 3)
-        image = cv2.line(image, (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
-        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (0, 0, 255), 3)
-        image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+        # # # draw on original image
+        # image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+        # image = cv2.line(image, (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+        # image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_u)), (int(x1_ + H_peak_r), int(y1_ + V_peak_u)), (0, 0, 255), 3)
+        # image = cv2.line(image, (int(x1_ + H_peak_l), int(y1_ + V_peak_d)), (int(x1_ + H_peak_r), int(y1_ + V_peak_d)), (0, 0, 255), 3)
+
+        canny_inst = deepcopy(inst)
+        canny_inst.pred_boxes.tensor[0][0] = x1_ + H_peak_l
+        canny_inst.pred_boxes.tensor[0][1] = y1_ + V_peak_u
+        canny_inst.pred_boxes.tensor[0][2] = x1_ + H_peak_r
+        canny_inst.pred_boxes.tensor[0][3] = y1_ + V_peak_d
+        canny_insts.append(canny_inst)
 
 
         # save the bbox's edges
         cv2.imwrite(f'./tmp/{i}.edges.jpg', bbox_edges)
+    
+
+    v2 = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1)
+    canny_out = v2.draw_instance_predictions(Instances.cat(canny_insts).to("cpu"))
+
+    canny_img = canny_out.get_image()[:, :, ::-1]
+    original_img = original_out.get_image()[:, :, ::-1]
+
 
     # concat with original image
     edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-    edges = cv2.hconcat([image, edges])
+    edges = cv2.hconcat([image, edges, original_img, canny_img])
     # save the edges
     cv2.imwrite(f'./tmp/edges.jpg', edges)
 
