@@ -96,7 +96,12 @@ class grid_canvas(object):
         # Run inference
         outputs = predictor(self.image)
 
+        v1 = Visualizer(self.image[:, :, ::-1], metadata=metadata, scale=1)
+        out_beta = v1.draw_instance_predictions(outputs["instances"].to("cpu"))
+        beta_img = out_beta.get_image()[:, :, ::-1]
+
         refine_algo1(outputs, metadata, self.image)
+        # outputs["instances"] = Instances.cat(insts)
 
         # full size
         full_size_output_insts = outputs["instances"]
@@ -116,6 +121,7 @@ class grid_canvas(object):
             square_img = self.image[square.x1 : square.x2, square.y1 : square.y2].copy()
             # ic(square_img.shape)
             outputs = predictor(square_img)
+            refine_algo1(outputs, metadata, square_img)
 
             # draw the original image and write the predictions to txt
             '''
@@ -198,7 +204,7 @@ class grid_canvas(object):
         # fill the rest of the canvas with the original image, centered
         # output_image[0 : self.h, self.layout.w_grids * self.layout.a : self.layout.w_grids * self.layout.a + self.w] = pred
         output_image[int((self.canvas_size[0] - self.h) / 2) : int((self.canvas_size[0] + self.h) / 2), \
-                     self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a - self.w) / 2) : self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a + self.w) / 2)] = pred
+                     self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a - self.w) / 2) : self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a + self.w) / 2)] = beta_img
         output_image[int((self.canvas_size[0] - self.h) / 2) : int((self.canvas_size[0] + self.h) / 2), \
                      int((self.layout.w_grids * self.layout.a - self.w) / 2) : int((self.layout.w_grids * self.layout.a + self.w) / 2)] = pred_corrected
 
@@ -238,7 +244,6 @@ def refine_algo1(outputs, metadata, image):
         responce_map *= hist
         return responce_map
 
-
     # full size
     insts = outputs["instances"]
     ori_insts = deepcopy(insts)
@@ -251,6 +256,12 @@ def refine_algo1(outputs, metadata, image):
 
     for i in range(len(insts)):
         inst = insts[i]
+        # get class
+        cls = inst.pred_classes.cpu().numpy()[0]
+        # [0 "Cont.", 1 "Ttl.", 2 "Img.", 3 "Icon", 4 "Para.", 5 "Bg.", 6 "IrImg.", 7 "BgImg.", 8 "CtPil.", 9 "CtCir.", 10 "ImgCir."]
+        if cls in {1, 4}:
+            canny_insts.append(inst)
+            continue
         # get the bbox
         bbox = inst.pred_boxes.tensor.cpu().numpy()
         x1, y1, x2, y2 = bbox[0]
@@ -286,13 +297,13 @@ def refine_algo1(outputs, metadata, image):
         V_hist_u = v_hist[:int((y2 - y1) / 2)]
         V_hist_d = v_hist[int((y2 - y1) / 2):]
 
-        # use matplotlib to draw the histogram
-        import matplotlib.pyplot as plt
-        plt.close()
-        plt.plot(h_hist)
-        plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
-        plt.savefig(f'./tmp/{i}.hist.jpg')
-        plt.close()
+        # # use matplotlib to draw the histogram
+        # import matplotlib.pyplot as plt
+        # plt.close()
+        # plt.plot(h_hist)
+        # plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
+        # plt.savefig(f'./tmp/{i}.hist.jpg')
+        # plt.close()
 
         # # draw the histogram on the horizontal and vertical edges respectively
         # # first turn into BGR
@@ -341,7 +352,7 @@ def refine_algo1(outputs, metadata, image):
 
 
         # save the bbox's edges
-        cv2.imwrite(f'./tmp/{i}.edges.jpg', bbox_edges)
+        # cv2.imwrite(f'./tmp/{i}.edges.jpg', bbox_edges)
     
 
     v2 = Visualizer(image[:, :, ::-1], metadata=metadata, scale=1)
@@ -353,11 +364,10 @@ def refine_algo1(outputs, metadata, image):
 
     # concat with original image
     edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-    edges = cv2.hconcat([image, edges, original_img, canny_img])
+    outputimg = cv2.hconcat([image, edges, original_img, canny_img])
     # save the edges
-    cv2.imwrite(f'./tmp/edges.jpg', edges)
-
-    exit()
+    outputs["instances"] = Instances.cat(canny_insts)
+    # return canny_insts
 
 
 # def detect_rectangle(edge_img, i):

@@ -13,8 +13,8 @@ from icecream import ic, install
 install()
 ic.configureOutput(includeContext=True, contextAbsPath=True)
 
-datasetpath = '/root/autodl-tmp/real'
-datasetpath = '/root/autodl-tmp/DoraAIGC'
+datasetpath = '/root/autodl-tmp/dora_real/train'
+# datasetpath = '/root/autodl-tmp/DoraAIGC'
 # datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
 model_path = './output/model_0039999.pth'
@@ -46,6 +46,8 @@ for image_path in image_paths:
     # Load a random image from the dataset
 
     image = cv2.imread(os.path.join(datasetpath, image_path))
+    # first add black padding to the image
+    image = cv2.copyMakeBorder(image, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=(0, 0, 0))
 
     grid_canvas_ = grid_canvas(image, ratio=1)
     ic(grid_canvas_.canvas_size)
