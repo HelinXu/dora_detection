@@ -6,8 +6,8 @@ import os
 import matplotlib.pyplot as plt
 
 # read all the images
-path = '/root/autodl-tmp/dora_sim/train'
-save_path = '/root/autodl-tmp/dora_sim_canny/train'
+path = '/root/autodl-tmp/dora_sim/test'
+save_path = '/root/autodl-tmp/dora_sim_canny/test'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -29,3 +29,8 @@ for image_path in os.listdir(path):
     print(image_path + ' saved')
 
 
+# run a system command
+os.system('cp /root/autodl-tmp/dora_sim/train/train.json /root/autodl-tmp/dora_sim_canny/train/')
+os.system("sed -i 's/webp/png/g' /root/autodl-tmp/dora_sim_canny/train/train.json")
+os.system('cp /root/autodl-tmp/dora_sim/test/test.json /root/autodl-tmp/dora_sim_canny/test/')
+os.system("sed -i 's/webp/png/g' /root/autodl-tmp/dora_sim_canny/test/test.json")

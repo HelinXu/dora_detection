@@ -18,6 +18,6 @@ DATASETS:
   TRAIN: ("train_dora_sim",)
   TEST: ("test_dora_sim",)
 SOLVER:
-  IMS_PER_BATCH: 4
+  IMS_PER_BATCH: 48
 INPUT:
   FORMAT: RGBA
