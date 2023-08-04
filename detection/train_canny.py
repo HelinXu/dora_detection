@@ -51,7 +51,7 @@ def visualize(dataset_name='valid_ui', cfg=None, num=4, iter=0):
     dataset = get_detection_dataset_dicts(dataset_name)
 
     for i, d in enumerate(random.sample(dataset, num)):
-        img = cv2.imread(d["file_name"])
+        img = cv2.imread(d["file_name"], cv2.IMREAD_UNCHANGED)
         visualizer = Visualizer(img[:, :, ::-1], metadata=metadata, scale=0.5)
         vis = visualizer.draw_dataset_dict(d)
         gt = vis.get_image()[:, :, ::-1]
