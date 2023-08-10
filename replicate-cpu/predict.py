@@ -34,9 +34,6 @@ class Predictor(BasePredictor):
     def predict(
         self,
         image: Path = Input(description="Grayscale input image"),
-        scale: float = Input(
-            description="Factor to scale image by", ge=0, le=10, default=1.5
-        ),
     ) -> Path:
         """Run a single prediction on the model"""
         # processed_input = preprocess(image)
@@ -45,11 +42,19 @@ class Predictor(BasePredictor):
         image_path = str(image)
         img = cv2.imread(image_path)
 
+        print('image read successful.')
+
         grid_canvas_ = grid_canvas(img, ratio=1)
+
+        print('canvas built')
+
         imagename = 'output.jpg'
         vis = grid_canvas_.draw_grid_prediction(self.model, self.metadata, name=imagename)
-        cv2.imwrite(f'./img/{imagename}', vis)
-        return vis
+        
+        print('prediction done')
+
+        cv2.imwrite(f'/tmp/{imagename}', vis)
+        return Path(f'/tmp/{imagename}')
 
 
 if __name__ == "__main__":
