@@ -25,7 +25,7 @@ class Predictor(BasePredictor):
         cfg.merge_from_file(config_path)
         cfg.MODEL.WEIGHTS = model_path
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # Adjust the threshold as needed
-        cfg.MODEL.DEVICE = 'cpu'
+        cfg.MODEL.DEVICE = 'cuda'
         predictor = DefaultPredictor(cfg)
         self.model = predictor
         self.metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para.", "Bg.", "IrImg.", "BgImg.", "CtPil.", "CtCir.", "ImgCir.", "Sec.", "Sec.B"])  # Add the object classes
