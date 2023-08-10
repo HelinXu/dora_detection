@@ -1,0 +1,18 @@
+_BASE_: "Base-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  MASK_ON: False
+  RESNETS:
+    DEPTH: 50
+  SEM_SEG_HEAD:
+    NUM_CLASSES: 11
+  ROI_HEADS:
+    NUM_CLASSES: 11
+SOLVER:
+  CHECKPOINT_PERIOD: 5000
+  IMS_PER_BATCH: 32
+TEST:
+  EVAL_PERIOD: 2500
+DATASETS:
+  TRAIN: ("train_dora_sim",)
+  TEST: ("test_dora_sim",)
