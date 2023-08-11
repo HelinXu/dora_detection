@@ -48,14 +48,16 @@ class Predictor(BasePredictor):
 
         print('canvas built')
 
-        imagename = 'output.jpg'
-        vis = grid_canvas_.draw_grid_prediction(self.model, self.metadata, name=imagename)
+        imagename = 'output'
+        grid_canvas_.draw_grid_prediction(self.model, self.metadata, name=imagename)
         
         print('prediction done')
 
-        cv2.imwrite(f'/tmp/{imagename}', vis)
-        print(f'image saved to /tmp/{imagename}')
-        return Path(f'/tmp/{imagename}')
+        # cv2.imwrite(f'/tmp/{imagename}', vis)
+        # print(f'image saved to /tmp/{imagename}')
+        return [Path(f'/tmp/{imagename}_ai.jpg'), Path(f'/tmp/{imagename}_ai.txt'),
+                Path(f'/tmp/{imagename}_small_obj_boost.jpg'), Path(f'/tmp/{imagename}_small_obj_boost.txt'),
+                Path(f'/tmp/{imagename}_refine.jpg'), Path(f'/tmp/{imagename}_refine.txt')]
 
 
 if __name__ == "__main__":
