@@ -85,15 +85,25 @@ class grid_canvas(object):
         for i in range(self.layout.h_grids):
             for j in range(self.layout.w_grids):
                 self.squares.append(self.layout.get_square(i, j))
-                # ic the shape
-                # ic(self.squares[-1].x1 - self.squares[-1].x2, self.squares[-1].y1 - self.squares[-1].y2)
-                # self.square_imgs.append(
-                #     self.image[self.squares[-1].x1 : self.squares[-1].x2, self.squares[-1].y1 : self.squares[-1].y2].copy()
-                # )
-                # ic(self.square_imgs[-1].shape)
         self.canvas_size = (self.layout.h_grids * self.layout.b, self.layout.w_grids * self.layout.a * 2, c)
         
     def draw_grid_prediction(self, predictor, metadata, save=True, name=''):
+        '''
+        This function returns:
+            (1) the original predictions directly from the detection model (by Helin at Dora AI)
+            (2) the boosted predictions that increases the recall of small objects (especially those 
+            small texts within buttons, etc.)
+                This is done by cropping the original image into small squares and run inference on 
+                each of them.
+                Then, we merge the predictions from all the squares and return the merged predictions. 
+                (and we integrate the smaller bboxs with the larger ones fron step 1.)
+            (3) the refined predictions of (2).
+                This is done with algorithm 1 in, which mainly used canny edge detection to refine 
+                the bboxs for container, images, etc.
+        For each prediction results, we save the image and the text file in /tmp/ folder.
+        They are, respectively, {name}_ai.jpg and {name}_ai.txt for (1), {name}_boost.jpg and 
+        {name}_boost.txt for (2), and {name}_refine.jpg and {name}_refine.txt for (3).
+        '''
 
         def save_img(img, img_name):
             cv2.imwrite(f'/tmp/{img_name}.jpg', img)
@@ -119,16 +129,11 @@ class grid_canvas(object):
         beta_img = out_beta.get_image()[:, :, ::-1]
 
         #######################
-        # save pred from AI
+        # save pred from AI （1）
         #######################
         save_img(beta_img, f'{name}_ai')
         save_pred_text(outputs["instances"], f'{name}_ai')
         print(f'save {name}_ai to /tmp/{name}_ai.jpg and /tmp/{name}_ai.txt')
-
-
-
-
-        # outputs["instances"] = Instances.cat(insts)
 
         # full size
         full_size_output_insts = outputs["instances"]
@@ -137,65 +142,22 @@ class grid_canvas(object):
         keep = np.where(areas > 0.01 * self.h * self.w)[0]
         full_size_output_insts = full_size_output_insts[keep]
 
-        # # Visualize the predictions
-        # v = Visualizer(self.image[:, :, ::-1], metadata=metadata, scale=1)
-        # out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-        # # Save the visualization
-        # pred = out.get_image()[:, :, ::-1]
-        # grid_preds = []
         all_output_insts = []
         for square in self.squares:
             square_img = self.image[square.x1 : square.x2, square.y1 : square.y2].copy()
-            # ic(square_img.shape)
             outputs = predictor(square_img)
-            # refine_algo1(outputs, metadata, square_img)
-
-            # draw the original image and write the predictions to txt
-            '''
-    boxes = instances.pred_boxes.tensor.numpy()
-    classes = instances.pred_classes.numpy()
-    labels = [metadata.thing_classes[i] for i in classes]
-    scores = instances.scores.numpy()
-    with open(f'./output/imgs/pred_{imagename}.txt', 'w') as f:
-        for lab, box, cls, score in zip(labels, boxes, classes, scores):
-            f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
-            '''
-            # ic(outputs["instances"])
             output_insts = outputs["instances"]
-            # output_insts.image_height = full_size_output_insts.image_height
-            # ic(len(output_insts))
+
             output_insts.pred_boxes.tensor[:, 0] += square.y1
             output_insts.pred_boxes.tensor[:, 1] += square.x1
             output_insts.pred_boxes.tensor[:, 2] += square.y1
             output_insts.pred_boxes.tensor[:, 3] += square.x1
-            # ic(output_insts)
+
             areas = outputs["instances"].pred_boxes.area().cpu().numpy()
             keep = np.where(areas < 0.01 * self.h * self.w)[0]
-            # ic(keep)
-            # bbox = bbox[keep]
-            # classes = classes[keep]
-            # labels = [metadata.thing_classes[i] for i in classes]
-            # scores = scores[keep]
             output_insts = output_insts[keep]
-            # ic(output_insts)
-            # ic(len(output_insts))
 
             all_output_insts.append(output_insts)
-            
-            # bbox = output_insts.pred_boxes.tensor.cpu().numpy()
-            # classes = output_insts.pred_classes.cpu().numpy()
-            # labels = [metadata.thing_classes[i] for i in classes]
-            # scores = output_insts.scores.cpu().numpy()
-
-            # v = Visualizer(square_img[:, :, ::-1], metadata=metadata, scale=1)
-            # out = v.draw_instance_predictions(output_insts.to('cpu'))
-            # grid_preds.append(out.get_image()[:, :, ::-1])
-            # name = str(time.time())
-            # with open(f'./output/imgs/{name}.txt', 'w') as f:
-            #     for lab, box, cls, score in zip(labels, bbox, classes, scores):
-            #         f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
-            # cv2.imwrite(f'./output/imgs/{name}.png', square_img)
-            # cv2.imwrite(f'./output/imgs/{name}_pred.png', grid_preds[-1])
 
         # merge all the instances
         all_output_insts = [inst.to("cpu") for inst in all_output_insts]
@@ -208,7 +170,7 @@ class grid_canvas(object):
         out = v.draw_instance_predictions(all_output_insts)
         pred_boost_small_obj = out.get_image()[:, :, ::-1]
         #######################
-        # save pred after small_obj_boost
+        # save pred after small_obj_boost （2）
         #######################
         save_img(pred_boost_small_obj, f'{name}_small_obj_boost')
         save_pred_text(all_output_insts, f'{name}_small_obj_boost')
@@ -222,61 +184,16 @@ class grid_canvas(object):
         out = v2.draw_instance_predictions(refined_insts)
         pred_refined = out.get_image()[:, :, ::-1]
         #######################
-        # save pred after refine
+        # save pred after refine （3）
         #######################
         save_img(pred_refined, f'{name}_refine')
         save_pred_text(refined_insts, f'{name}_refine')
         print(f'save {name}_ai to /tmp/{name}_refine.jpg and /tmp/{name}_refine.txt')
 
-        # # use opencv to draw the grid of predictions
-        # output_image = np.zeros(self.canvas_size, dtype=np.uint8)
-        # for i in range(self.layout.h_grids):
-        #     for j in range(self.layout.w_grids):
-        #         output_image[   i * self.layout.b : (i + 1) * self.layout.b, \
-        #                         j * self.layout.a : (j + 1) * self.layout.a] = grid_preds[i * self.layout.w_grids + j]
-        
-        # # draw the grid
-        # for i in range(self.layout.h_grids):
-        #     cv2.line(output_image, (0, i * self.layout.a), (self.layout.w_grids * self.layout.a, i * self.layout.a), (255, 255, 255), 3)
-        # for j in range(self.layout.w_grids):
-        #     cv2.line(output_image, (j * self.layout.a, 0), (j * self.layout.a, self.layout.h_grids * self.layout.a), (255, 255, 255), 3)
+        return
 
 
-
-        # remove those instances with large area
-
-        # # None-Maximum Suppression
-        # keep = all_output_insts.non_max_suppression(threshold=0.5)
-
-
-
-
-        # # fill the rest of the canvas with the original image, centered
-        # # output_image[0 : self.h, self.layout.w_grids * self.layout.a : self.layout.w_grids * self.layout.a + self.w] = pred
-        # output_image[int((self.canvas_size[0] - self.h) / 2) : int((self.canvas_size[0] + self.h) / 2), \
-        #              self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a - self.w) / 2) : self.layout.w_grids * self.layout.a + int((self.layout.w_grids * self.layout.a + self.w) / 2)] = beta_img
-        # output_image[int((self.canvas_size[0] - self.h) / 2) : int((self.canvas_size[0] + self.h) / 2), \
-        #              int((self.layout.w_grids * self.layout.a - self.w) / 2) : int((self.layout.w_grids * self.layout.a + self.w) / 2)] = pred_corrected
-
-        # bboxs = all_output_insts.pred_boxes.tensor.cpu().numpy()
-        # classes = all_output_insts.pred_classes.cpu().numpy()
-        # labels = [metadata.thing_classes[i] for i in classes]
-        # scores = all_output_insts.scores.cpu().numpy()
-        # with open(f'/tmp/{name}.txt', 'w') as f:
-        #     for lab, box, cls, score in zip(labels, bboxs, classes, scores):
-        #         f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
-        # save the image
-        # if save:
-        #     cv2.imwrite(f'./output/imgs/pred_{name}', output_image)
-        # also save the original image
-        # cv2.imwrite(f'./output/imgs/{name}', self.image)
-        return 
-
-zoom_alpha = 1.2
-
-
-
-def refine_algo1(outputs, metadata, image):
+def refine_algo1(outputs, metadata, image, zoom_alpha = 1.2):
 
     def conv_hist(l, r, zoom_alpha, hist):
         # build the responce map, use float
@@ -346,26 +263,6 @@ def refine_algo1(outputs, metadata, image):
         v_hist = conv_hist(y1 - y1_, y2 - y2_ + len(v_hist), zoom_alpha, v_hist)
         V_hist_u = v_hist[:int((y2 - y1) / 2)]
         V_hist_d = v_hist[int((y2 - y1) / 2):]
-
-        # # use matplotlib to draw the histogram
-        # import matplotlib.pyplot as plt
-        # plt.close()
-        # plt.plot(h_hist)
-        # plt.plot(conv_hist(x1 - x1_, x2 - x2_ + len(h_hist), zoom_alpha, h_hist))
-        # plt.savefig(f'./tmp/{i}.hist.jpg')
-        # plt.close()
-
-        # # draw the histogram on the horizontal and vertical edges respectively
-        # # first turn into BGR
-        # bbox_edges = cv2.cvtColor(bbox_edges, cv2.COLOR_GRAY2BGR)
-        # # draw the histogram
-        # for i in range(len(h_hist)):
-        #     bbox_edges = cv2.line(bbox_edges, (i, bbox_edges.shape[0]), (i, bbox_edges.shape[0] - h_hist[i]), (0, 0, 255), 1)
-        # for i in range(len(v_hist)):
-        #     bbox_edges = cv2.line(bbox_edges, (0, i), (v_hist[i], i), (0, 0, 255), 1)
-
-        # # save image
-        # cv2.imwrite(f'{i}.hist.jpg', bbox_edges)
 
         # find the peak
         H_peak_l = np.argmax(H_hist_l)
