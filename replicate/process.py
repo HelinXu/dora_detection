@@ -12,6 +12,7 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.structures import Instances
 import numpy as np
 import cv2
+import os
 
 import time
 
@@ -95,16 +96,19 @@ class grid_canvas(object):
     def draw_grid_prediction(self, predictor, metadata, save=True, name=''):
 
         def save_img(img, img_name):
-            cv2.imwrite(f'tmp/{img_name}.jpg', img)
+            cv2.imwrite(f'/tmp/{img_name}.jpg', img)
 
         def save_pred_text(all_output_insts, name):
             bboxs = all_output_insts.pred_boxes.tensor.cpu().numpy()
             classes = all_output_insts.pred_classes.cpu().numpy()
             labels = [metadata.thing_classes[i] for i in classes]
             scores = all_output_insts.scores.cpu().numpy()
-            with open(f'tmp/{name}.txt', 'w') as f:
+            with open(f'/tmp/{name}.txt', 'w') as f:
                 for lab, box, cls, score in zip(labels, bboxs, classes, scores):
                     f.write(f'{lab} {cls} {score} {box[0]} {box[1]} {box[2]} {box[3]}\n')
+            print('\n\nHere is the prediction:\n')
+            os.system(f'cat /tmp/{name}.txt')
+            print('\nThe end.\n')
 
 
         # Run inference

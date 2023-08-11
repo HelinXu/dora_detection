@@ -2,6 +2,7 @@
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
 from cog import BasePredictor, Input, Path
+from typing import List
 import cv2
 import torch
 import random
@@ -34,7 +35,7 @@ class Predictor(BasePredictor):
     def predict(
         self,
         image: Path = Input(description="Grayscale input image"),
-    ) -> Path:
+    ) -> List[Path]:
         """Run a single prediction on the model"""
         # processed_input = preprocess(image)
         # output = self.model(processed_image, scale)
@@ -48,13 +49,27 @@ class Predictor(BasePredictor):
 
         print('canvas built')
 
-        imagename = 'output'
+        imagename = 'dora'
         grid_canvas_.draw_grid_prediction(self.model, self.metadata, name=imagename)
         
-        print('prediction done')
 
         # cv2.imwrite(f'/tmp/{imagename}', vis)
         # print(f'image saved to /tmp/{imagename}')
+        # # concat the three images
+        # img1 = cv2.imread(f'/tmp/{imagename}_ai.png')
+        # img2 = cv2.imread(f'/tmp/{imagename}_small_obj_boost.png')
+        # img3 = cv2.imread(f'/tmp/{imagename}_refine.png')
+        # img4 = cv2.imread(image_path)
+        # img1 = cv2.resize(img1, (img4.shape[1], img4.shape[0]))
+        # img2 = cv2.resize(img2, (img4.shape[1], img4.shape[0]))
+        # img3 = cv2.resize(img3, (img4.shape[1], img4.shape[0]))
+        # img = np.concatenate((img4, img1, img2, img3), axis=1)
+        # cv2.imwrite(f'/tmp/{imagename}.png', img1)
+        # cv2.imwrite(f'/tmp/{imagename}_small_obj_boost.png', img2)
+        # cv2.imwrite(f'/tmpt/{imagename}_refine.png', img3)
+
+        print('prediction done')
+        os.system('ls /tmp')
         return [Path(f'/tmp/{imagename}_ai.jpg'), Path(f'/tmp/{imagename}_ai.txt'),
                 Path(f'/tmp/{imagename}_small_obj_boost.jpg'), Path(f'/tmp/{imagename}_small_obj_boost.txt'),
                 Path(f'/tmp/{imagename}_refine.jpg'), Path(f'/tmp/{imagename}_refine.txt')]
