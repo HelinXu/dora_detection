@@ -8,7 +8,8 @@ Author: Helin Xu xuhelin1911@gmail.com
 
 - Python >= 3.8
 - PyTorch 1.10
-- CUDA 11.3
+- TorchVision 1.11.0
+- CUDA 11.3 or 11.1
 - Detectron2 0.6 (Install by `python -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu113/torch1.10/index.html`)
 - icecream (Install by `pip install icecream==2.1.3`)
 
