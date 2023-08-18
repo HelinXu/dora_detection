@@ -13,12 +13,12 @@ from icecream import ic, install
 install()
 ic.configureOutput(includeContext=True, contextAbsPath=True)
 
-datasetpath = '/root/autodl-tmp/dora_real/train'
-# datasetpath = '/root/autodl-tmp/DoraAIGC'
+datasetpath = '/root/autodl-tmp/dora_sim_canny/train'
+datasetpath = '/root/autodl-tmp/DoraAIGC'
 # datasetpath = '/root/autodl-tmp/dora_sim/test'
 # Load the pre-trained model and config
-model_path = './output/model_0039999.pth'
-config_path = './configs/sim_11classes.yaml'
+model_path = './output/model_0054999.pth'
+config_path = './configs/sim_13classes.yaml'
 cfg = get_cfg()
 cfg.merge_from_file(config_path)
 cfg.MODEL.WEIGHTS = model_path
@@ -35,7 +35,7 @@ image_paths = os.listdir(datasetpath)
 # shuffle the image paths
 random.shuffle(image_paths)
 
-metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para.", "Bg.", "IrImg.", "BgImg.", "CtPil.", "CtCir.", "ImgCir."])  # Add the object classes
+metadata = Metadata().set(thing_classes=["Cont.", "Ttl.", "Img.", "Icon", "Para.", "Bg.", "IrImg.", "BgImg.", "CtPil.", "CtCir.", "ImgCir.", "Sec.A", "Sec.B"])  # Add the object classes
 
 if not os.path.exists('./output/imgs'):
     os.mkdir('./output/imgs')
@@ -46,8 +46,9 @@ for image_path in image_paths:
     # Load a random image from the dataset
 
     image = cv2.imread(os.path.join(datasetpath, image_path))
-    # first add black padding to the image
-    image = cv2.copyMakeBorder(image, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+
+    image = cv2.copyMakeBorder(image, 40, 40, 40, 40, cv2.BORDER_CONSTANT, value=(139, 71, 99))
+    image = cv2.copyMakeBorder(image, 40, 40, 40, 40, cv2.BORDER_CONSTANT, value=(100, 225, 142))
 
     grid_canvas_ = grid_canvas(image, ratio=1)
     ic(grid_canvas_.canvas_size)
